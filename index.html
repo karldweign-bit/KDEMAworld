@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>KDEMA World</title>
+<link rel="stylesheet" href="style.css?v=1.0" />
+</head>
+<body>
+  <div id="ui">
+    <h1>KDEMA World</h1>
+    <div id="shape-buttons">
+      <button id="btn-ball" class="active">Ball</button>
+      <button id="btn-block">Block</button>
+    </div>
+    <button id="btn-reset">Reset Shape</button>
+
+    <div id="color-swatches" role="group" aria-label="Color"></div>
+
+    <div id="pattern-buttons">
+      <button id="btn-pattern-solid" class="pattern-btn active" data-pattern="solid">Solid</button>
+      <button id="btn-pattern-dots" class="pattern-btn" data-pattern="dots">Dots</button>
+      <button id="btn-pattern-stripes" class="pattern-btn" data-pattern="stripes">Stripes</button>
+    </div>
+
+    <p id="hint">Grab a point and drag up to puff it out, drag down to push it in. Drag empty space to rotate.</p>
+
+    <div id="save-row">
+      <button id="btn-save">Save Character</button>
+    </div>
+    <div id="gallery-label">My Characters</div>
+    <div id="character-gallery"></div>
+  </div>
+  <canvas id="scene"></canvas>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="app.js?v=1.0"></script>
+</body>
+</html>
