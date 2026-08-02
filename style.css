@@ -67,6 +67,27 @@ html, body {
   color: #063d2f;
 }
 
+#mirror-toggle {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  background: #3a2470;
+  color: #f4f0ff;
+  cursor: pointer;
+}
+
+#mirror-toggle input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #ffd166;
+  cursor: pointer;
+}
+
 #hint {
   width: 100%;
   font-size: 12px;

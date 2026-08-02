@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
 
-const APP_VERSION = "KW_SYS_V.1.0";
+const APP_VERSION = "KW_SYS_V.1.1";
 console.log(APP_VERSION);
 
 window.__THREE_DEBUG__ = { THREE };
@@ -36,6 +36,27 @@ scene.add(key);
 const rim = new THREE.DirectionalLight(0x6bc7ff, 0.4);
 rim.position.set(-3, -1, -2);
 scene.add(rim);
+
+// Mirror/symmetry plane, shown at x=0 while "Mirror" is checked.
+const mirrorPlane = new THREE.Mesh(
+  new THREE.PlaneGeometry(3, 3),
+  new THREE.MeshBasicMaterial({
+    color: 0xffd166,
+    transparent: true,
+    opacity: 0.3,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+    depthTest: false, // it sits inside the shape's center, so draw it on
+                       // top like a guide overlay instead of letting the
+                       // shape's front surface occlude it via z-buffer
+  })
+);
+mirrorPlane.rotation.y = Math.PI / 2; // face +X, spans Y/Z at x=0
+mirrorPlane.renderOrder = 1; // after the main mesh (renderOrder 0)
+mirrorPlane.visible = false;
+scene.add(mirrorPlane);
+
+let mirrorEnabled = false;
 
 const material = new THREE.MeshStandardMaterial({
   color: 0xffffff,
@@ -252,26 +273,40 @@ function onPointerMove(clientX, clientY) {
 
   const v = new THREE.Vector3();
   const basePt = new THREE.Vector3();
-  for (let i = 0; i < pos.count; i++) {
-    basePt.set(
-      basePositions[i * 3],
-      basePositions[i * 3 + 1],
-      basePositions[i * 3 + 2]
-    );
-    const dist = basePt.distanceTo(centerBase);
-    if (dist > BRUSH_RADIUS) continue;
-    const weight = Math.pow(1 - dist / BRUSH_RADIUS, 2);
 
-    v.fromBufferAttribute(pos, i);
-    v.addScaledVector(centerNormal, pushAmount * weight);
+  function applyBrush(refCenter, refNormal) {
+    for (let i = 0; i < pos.count; i++) {
+      basePt.set(
+        basePositions[i * 3],
+        basePositions[i * 3 + 1],
+        basePositions[i * 3 + 2]
+      );
+      const dist = basePt.distanceTo(refCenter);
+      if (dist > BRUSH_RADIUS) continue;
+      const weight = Math.pow(1 - dist / BRUSH_RADIUS, 2);
 
-    const diff = v.clone().sub(basePt);
-    if (diff.length() > MAX_DISPLACE) {
-      diff.setLength(MAX_DISPLACE);
-      v.copy(basePt).add(diff);
+      v.fromBufferAttribute(pos, i);
+      v.addScaledVector(refNormal, pushAmount * weight);
+
+      const diff = v.clone().sub(basePt);
+      if (diff.length() > MAX_DISPLACE) {
+        diff.setLength(MAX_DISPLACE);
+        v.copy(basePt).add(diff);
+      }
+      pos.setXYZ(i, v.x, v.y, v.z);
     }
-    pos.setXYZ(i, v.x, v.y, v.z);
   }
+
+  applyBrush(centerBase, centerNormal);
+
+  if (mirrorEnabled) {
+    const mirrorCenter = centerBase.clone();
+    mirrorCenter.x *= -1;
+    const mirrorNormal = centerNormal.clone();
+    mirrorNormal.x *= -1;
+    applyBrush(mirrorCenter, mirrorNormal);
+  }
+
   pos.needsUpdate = true;
   mesh.geometry.computeVertexNormals();
 }
@@ -292,6 +327,12 @@ window.addEventListener("pointercancel", onPointerUp);
 const btnBall = document.getElementById("btn-ball");
 const btnBlock = document.getElementById("btn-block");
 const btnReset = document.getElementById("btn-reset");
+const chkMirror = document.getElementById("chk-mirror");
+
+chkMirror.addEventListener("change", () => {
+  mirrorEnabled = chkMirror.checked;
+  mirrorPlane.visible = mirrorEnabled;
+});
 
 // Shared select-helpers so both direct UI clicks and loading a saved
 // character (further down) update state + button highlighting the same way.
