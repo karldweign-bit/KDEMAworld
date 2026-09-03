@@ -188,6 +188,114 @@ const Pop = (() => {
   return { start };
 })();
 
+/* ===================== GENERIC INDEXEDDB KEY-VALUE STORE (per-device) ===================== */
+function IDBStore(dbName, storeName) {
+  let dbPromise = null;
+
+  function openDB() {
+    if (dbPromise) return dbPromise;
+    dbPromise = new Promise((resolve, reject) => {
+      const req = indexedDB.open(dbName, 1);
+      req.onupgradeneeded = () => { req.result.createObjectStore(storeName); };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+    return dbPromise;
+  }
+
+  async function set(id, value) {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(storeName, 'readwrite');
+      tx.objectStore(storeName).put(value, id);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  async function remove(id) {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(storeName, 'readwrite');
+      tx.objectStore(storeName).delete(id);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  async function getAll() {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(storeName, 'readonly');
+      const result = {};
+      const req = tx.objectStore(storeName).openCursor();
+      req.onsuccess = e => {
+        const cursor = e.target.result;
+        if (cursor) { result[cursor.key] = cursor.value; cursor.continue(); }
+        else resolve(result);
+      };
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  return { set, remove, getAll };
+}
+
+const SoundStore = IDBStore('kdemaZooSounds', 'sounds');
+const ImageStore = IDBStore('kdemaPeekabooImages', 'images');
+
+/* ===================== ADMIN (shared passcode gate + panel modal) ===================== */
+const Admin = (() => {
+  const modal = document.getElementById('admin-modal');
+  const gate = document.getElementById('admin-gate');
+  const panel = document.getElementById('admin-panel');
+  const passcodeInput = document.getElementById('admin-passcode-input');
+  const passcodeSubmit = document.getElementById('admin-passcode-submit');
+  const passcodeError = document.getElementById('admin-passcode-error');
+  const gateCancel = document.getElementById('admin-gate-cancel');
+  const closeBtn = document.getElementById('admin-close-btn');
+  const titleEl = document.getElementById('admin-panel-title');
+  const descEl = document.getElementById('admin-panel-desc');
+  const listEl = document.getElementById('admin-list');
+
+  const ADMIN_PASSCODE = '1234';
+  let currentConfig = null;
+
+  function open(config) {
+    currentConfig = config;
+    modal.style.display = 'flex';
+    gate.style.display = 'flex';
+    panel.style.display = 'none';
+    passcodeError.classList.add('hidden');
+    passcodeInput.value = '';
+  }
+  function close() {
+    modal.style.display = 'none';
+    if (currentConfig && currentConfig.onClose) currentConfig.onClose();
+  }
+  function unlock() {
+    gate.style.display = 'none';
+    panel.style.display = 'flex';
+    titleEl.textContent = currentConfig.title;
+    descEl.textContent = currentConfig.desc;
+    listEl.innerHTML = '';
+    currentConfig.render(listEl);
+  }
+
+  gateCancel.addEventListener('click', close);
+  closeBtn.addEventListener('click', close);
+  passcodeSubmit.addEventListener('click', () => {
+    if (passcodeInput.value === ADMIN_PASSCODE) unlock();
+    else {
+      passcodeError.classList.remove('hidden');
+      passcodeInput.value = '';
+    }
+  });
+  passcodeInput.addEventListener('keydown', e => { if (e.key === 'Enter') passcodeSubmit.click(); });
+
+  return { open, close, get listEl() { return listEl; } };
+})();
+
 /* ===================== ANIMAL ZOO ===================== */
 const Zoo = (() => {
   const grid = document.getElementById('animal-grid');
@@ -195,23 +303,37 @@ const Zoo = (() => {
   const btnSurprise = document.getElementById('btn-surprise');
   let built = false;
 
+  const adminOpenBtn = document.getElementById('admin-open-btn');
+
+  const customAudio = {}; // id -> { blob, url }
+
   const animals = [
-    { word: 'MOOO!', freq: 220, cardClass: 'bg-primary-container text-on-primary-container', shadow: '#004965',
+    { id: 'cow', label: 'Cow', word: 'MOOO!', freq: 220, cardClass: 'bg-primary-container text-on-primary-container', shadow: '#004965',
       svg: `<circle cx="50" cy="54" fill="#ffffff" r="34"/><ellipse cx="40" cy="44" fill="#0d1c2e" rx="9" ry="12"/><ellipse cx="68" cy="50" fill="#0d1c2e" rx="7" ry="9"/><ellipse cx="28" cy="24" fill="#0d1c2e" rx="10" ry="6" transform="rotate(-30 28 24)"/><ellipse cx="72" cy="24" fill="#0d1c2e" rx="10" ry="6" transform="rotate(30 72 24)"/><ellipse cx="50" cy="64" fill="#ffafd3" rx="20" ry="14"/><circle cx="43" cy="62" fill="#811057" r="3"/><circle cx="57" cy="62" fill="#811057" r="3"/><circle cx="39" cy="44" fill="#00668a" r="3.5"/><circle cx="61" cy="44" fill="#00668a" r="3.5"/><circle cx="41" cy="42" fill="#ffffff" r="1.5"/><circle cx="63" cy="42" fill="#ffffff" r="1.5"/><path d="M44 70 C47 74 53 74 56 70" stroke="#811057" stroke-linecap="round" stroke-width="2"/>` },
-    { word: 'ROAAR!', freq: 130, cardClass: 'bg-secondary-container text-on-secondary-container', shadow: '#693300',
+    { id: 'lion', label: 'Lion', word: 'ROAAR!', freq: 130, cardClass: 'bg-secondary-container text-on-secondary-container', shadow: '#693300',
       svg: `<circle cx="50" cy="50" fill="#ffb783" r="38"/><circle cx="50" cy="50" fill="#944a00" r="34" stroke="#ffdcc5" stroke-dasharray="8 6" stroke-width="3"/><circle cx="50" cy="52" fill="#ffdcc5" r="24"/><circle cx="30" cy="30" fill="#ffdcc5" r="7"/><circle cx="70" cy="30" fill="#ffdcc5" r="7"/><circle cx="41" cy="48" fill="#301400" r="3"/><circle cx="59" cy="48" fill="#301400" r="3"/><polygon fill="#944a00" points="50,56 46,52 54,52"/><path d="M46 58 Q50 63 54 58" stroke="#301400" stroke-linecap="round" stroke-width="2"/>` },
-    { word: 'QUACK!', freq: 392, cardClass: 'bg-surface-container-highest text-on-surface', shadow: '#ccdbf3',
+    { id: 'duck', label: 'Duck', word: 'QUACK!', freq: 392, cardClass: 'bg-surface-container-highest text-on-surface', shadow: '#ccdbf3',
       svg: `<circle cx="46" cy="54" fill="#ffdcc5" r="28"/><circle cx="56" cy="40" fill="#ffdcc5" r="18"/><circle cx="58" cy="36" fill="#0d1c2e" r="3"/><ellipse cx="74" cy="42" fill="#fd933d" rx="10" ry="5"/><path d="M30 52 C30 62 42 66 50 66 C42 66 36 60 30 52 Z" fill="#ffb783"/>` },
-    { word: 'RIBBIT!', freq: 330, cardClass: 'bg-primary-fixed text-on-primary-fixed', shadow: '#7bd0ff',
+    { id: 'frog', label: 'Frog', word: 'RIBBIT!', freq: 330, cardClass: 'bg-primary-fixed text-on-primary-fixed', shadow: '#7bd0ff',
       svg: `<circle cx="34" cy="36" fill="#7bd0ff" r="11"/><circle cx="66" cy="36" fill="#7bd0ff" r="11"/><circle cx="34" cy="35" fill="#ffffff" r="5"/><circle cx="66" cy="35" fill="#ffffff" r="5"/><circle cx="35" cy="35" fill="#004965" r="2.5"/><circle cx="67" cy="35" fill="#004965" r="2.5"/><ellipse cx="50" cy="56" fill="#7bd0ff" rx="30" ry="22"/><ellipse cx="50" cy="62" fill="#c4e7ff" rx="18" ry="12"/><path d="M38 56 Q50 66 62 56" stroke="#004965" stroke-linecap="round" stroke-width="2.5"/>` },
-    { word: 'WOOF!', freq: 260, cardClass: 'bg-secondary-fixed text-on-secondary-fixed', shadow: '#ffb783',
+    { id: 'puppy', label: 'Puppy', word: 'WOOF!', freq: 260, cardClass: 'bg-secondary-fixed text-on-secondary-fixed', shadow: '#ffb783',
       svg: `<ellipse cx="28" cy="46" fill="#944a00" rx="8" ry="16" transform="rotate(-15 28 46)"/><ellipse cx="72" cy="46" fill="#944a00" rx="8" ry="16" transform="rotate(15 72 46)"/><circle cx="50" cy="52" fill="#ffffff" r="28"/><circle cx="41" cy="46" fill="#301400" r="3.5"/><circle cx="59" cy="46" fill="#301400" r="3.5"/><ellipse cx="50" cy="54" fill="#301400" rx="5" ry="3.5"/><path d="M46 58 Q50 63 54 58" stroke="#301400" stroke-linecap="round" stroke-width="2"/>` },
-    { word: 'MEOW!', freq: 523, cardClass: 'bg-tertiary-fixed text-on-tertiary-fixed', shadow: '#ffafd3',
+    { id: 'kitty', label: 'Kitty', word: 'MEOW!', freq: 523, cardClass: 'bg-tertiary-fixed text-on-tertiary-fixed', shadow: '#ffafd3',
       svg: `<polygon fill="#ffafd3" points="26,38 34,20 46,32"/><polygon fill="#ffafd3" points="74,38 66,20 54,32"/><circle cx="50" cy="54" fill="#ffafd3" r="28"/><circle cx="40" cy="50" fill="#3d0026" r="3"/><circle cx="60" cy="50" fill="#3d0026" r="3"/><polygon fill="#811057" points="50,56 47,53 53,53"/><path d="M47 58 Q50 61 53 58" stroke="#3d0026" stroke-linecap="round" stroke-width="1.5"/>` }
   ];
 
-  function triggerAnimalJoy(el, word, freq) {
-    AudioFX.chime(freq);
+  function playAnimalSound(a) {
+    const custom = customAudio[a.id];
+    if (custom) {
+      const audio = new Audio(custom.url);
+      audio.play().catch(() => AudioFX.chime(a.freq));
+    } else {
+      AudioFX.chime(a.freq);
+    }
+  }
+
+  function triggerAnimalJoy(el, a) {
+    playAnimalSound(a);
     el.classList.add('scale-110');
     setTimeout(() => el.classList.remove('scale-110'), 350);
 
@@ -220,7 +342,7 @@ const Zoo = (() => {
     particle.className = 'fixed pointer-events-none z-50 flex items-center gap-1 font-label-lg text-label-lg text-primary px-3 py-1 bg-surface-container-lowest rounded-full shadow-lg';
     particle.style.left = (rect.left + rect.width / 2 - 40) + 'px';
     particle.style.top = (rect.top + 10) + 'px';
-    particle.innerHTML = `<span>${word}</span>`;
+    particle.innerHTML = `<span>${a.word}</span>`;
     document.body.appendChild(particle);
 
     let pos = 0;
@@ -245,7 +367,7 @@ const Zoo = (() => {
         <div class="w-full text-center">
           <span class="inline-block px-space-sm py-0.5 rounded-full bg-surface-container-lowest text-on-surface font-label-md text-label-md tracking-wider shadow-sm">${a.word}</span>
         </div>`;
-      btn.addEventListener('click', () => triggerAnimalJoy(btn, a.word, a.freq));
+      btn.addEventListener('click', () => triggerAnimalJoy(btn, a));
       grid.appendChild(btn);
     });
     built = true;
@@ -263,7 +385,75 @@ const Zoo = (() => {
     setTimeout(() => lucky.classList.remove('animate-bounce'), 1200);
   });
 
-  function start() { if (!built) build(); }
+  /* ---- Admin: upload custom sounds per animal (stored in IndexedDB, this device only) ---- */
+  async function loadCustomAudio() {
+    const stored = await SoundStore.getAll();
+    Object.keys(stored).forEach(id => {
+      const blob = stored[id];
+      if (customAudio[id]) URL.revokeObjectURL(customAudio[id].url);
+      customAudio[id] = { blob, url: URL.createObjectURL(blob) };
+    });
+  }
+
+  function renderAdminList(listEl) {
+    animals.forEach(a => {
+      const hasCustom = !!customAudio[a.id];
+      const row = document.createElement('div');
+      row.className = 'flex items-center gap-space-sm p-space-sm rounded-lg bg-surface-container';
+      row.innerHTML = `
+        <div class="flex-1 flex flex-col min-w-0">
+          <span class="font-label-md text-label-md text-on-surface">${a.label}</span>
+          <span class="font-body-sm text-body-sm text-on-surface-variant" data-status>${hasCustom ? 'Custom sound uploaded' : 'Using default chime'}</span>
+        </div>
+        <button class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center flex-shrink-0" data-play type="button" aria-label="Preview sound"><span class="material-symbols-outlined text-[20px]">play_arrow</span></button>
+        <label class="w-10 h-10 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center flex-shrink-0 cursor-pointer" aria-label="Upload sound">
+          <span class="material-symbols-outlined text-[20px]">upload</span>
+          <input accept="audio/*" class="hidden" data-upload type="file"/>
+        </label>
+        <button class="w-10 h-10 rounded-full bg-surface-container-highest text-on-surface-variant flex items-center justify-center flex-shrink-0" data-reset type="button" aria-label="Reset to default"><span class="material-symbols-outlined text-[20px]">restart_alt</span></button>`;
+
+      row.querySelector('[data-play]').addEventListener('click', () => playAnimalSound(a));
+
+      row.querySelector('[data-upload]').addEventListener('change', async e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        try {
+          await SoundStore.set(a.id, file);
+          if (customAudio[a.id]) URL.revokeObjectURL(customAudio[a.id].url);
+          customAudio[a.id] = { blob: file, url: URL.createObjectURL(file) };
+          row.querySelector('[data-status]').textContent = 'Custom sound uploaded';
+          AudioFX.chime(700);
+        } catch (err) {
+          console.error('Failed to save sound for', a.id, err);
+          row.querySelector('[data-status]').textContent = 'Upload failed — try again';
+        }
+      });
+
+      row.querySelector('[data-reset]').addEventListener('click', async () => {
+        if (!customAudio[a.id]) return;
+        await SoundStore.remove(a.id);
+        URL.revokeObjectURL(customAudio[a.id].url);
+        delete customAudio[a.id];
+        row.querySelector('[data-status]').textContent = 'Using default chime';
+        AudioFX.chime(400);
+      });
+
+      listEl.appendChild(row);
+    });
+  }
+
+  adminOpenBtn.addEventListener('click', () => {
+    Admin.open({
+      title: 'Animal Sounds',
+      desc: 'Upload a short sound clip per animal. Saved on this device only.',
+      render: renderAdminList
+    });
+  });
+
+  function start() {
+    if (!built) build();
+    loadCustomAudio();
+  }
 
   return { start };
 })();
@@ -572,17 +762,20 @@ const Peekaboo = (() => {
   const grid = document.getElementById('peekaboo-grid');
   const btnHideAll = document.getElementById('btn-hide-all');
   const btnShuffle = document.getElementById('btn-shuffle');
+  const adminOpenBtn = document.getElementById('peekaboo-admin-open-btn');
   let built = false;
 
   const housings = [
-    { icon: 'festival', bg: 'bg-tertiary-container text-on-tertiary-container', shadow: '#811057', label: 'Circus Tent' },
-    { icon: 'redeem', bg: 'bg-secondary-container text-on-secondary-container', shadow: '#693300', label: 'Gift Box' },
-    { icon: 'cloud', bg: 'bg-primary-fixed text-on-primary-fixed', shadow: '#7bd0ff', label: 'Fluffy Cloud' },
-    { icon: 'park', bg: 'bg-surface-container-highest text-on-surface', shadow: '#ccdbf3', label: 'Bushy Hedge' },
-    { icon: 'inventory_2', bg: 'bg-secondary-fixed text-on-secondary-fixed', shadow: '#ffb783', label: 'Toy Box' },
-    { icon: 'nights_stay', bg: 'bg-tertiary-fixed text-on-tertiary-fixed', shadow: '#ffafd3', label: 'Curtain' }
+    { id: 'tent', icon: 'festival', bg: 'bg-tertiary-container text-on-tertiary-container', shadow: '#811057', label: 'Circus Tent' },
+    { id: 'gift', icon: 'redeem', bg: 'bg-secondary-container text-on-secondary-container', shadow: '#693300', label: 'Gift Box' },
+    { id: 'cloud', icon: 'cloud', bg: 'bg-primary-fixed text-on-primary-fixed', shadow: '#7bd0ff', label: 'Fluffy Cloud' },
+    { id: 'hedge', icon: 'park', bg: 'bg-surface-container-highest text-on-surface', shadow: '#ccdbf3', label: 'Bushy Hedge' },
+    { id: 'toybox', icon: 'inventory_2', bg: 'bg-secondary-fixed text-on-secondary-fixed', shadow: '#ffb783', label: 'Toy Box' },
+    { id: 'curtain', icon: 'nights_stay', bg: 'bg-tertiary-fixed text-on-tertiary-fixed', shadow: '#ffafd3', label: 'Curtain' }
   ];
   const faces = ['🐻', '🐰', '🐧', '🦉', '🦊', '🐘', '🐼', '🦁'];
+
+  const customImages = {}; // housing id -> { kind: 'blob'|'url', url, blob? }
 
   function pickFaces() {
     const shuffled = [...faces].sort(() => Math.random() - 0.5);
@@ -590,6 +783,14 @@ const Peekaboo = (() => {
   }
 
   let assignedFaces = [];
+
+  function backFaceHTML(h, i) {
+    const custom = customImages[h.id];
+    if (custom) {
+      return `<img src="${custom.url}" alt="${h.label} surprise" class="w-full h-full object-cover rounded-xl" referrerpolicy="no-referrer">`;
+    }
+    return assignedFaces[i];
+  }
 
   function render() {
     grid.innerHTML = '';
@@ -602,8 +803,8 @@ const Peekaboo = (() => {
             <span class="material-symbols-outlined text-[48px]">${h.icon}</span>
             <span class="font-label-sm text-label-sm text-center px-1">${h.label}</span>
           </div>
-          <div class="peek-face peek-back rounded-xl bg-surface-container-lowest shadow-[0_8px_0_#d5e3fc] flex items-center justify-center text-[56px]">
-            ${assignedFaces[i]}
+          <div class="peek-face peek-back rounded-xl bg-surface-container-lowest shadow-[0_8px_0_#d5e3fc] flex items-center justify-center text-[56px] overflow-hidden">
+            ${backFaceHTML(h, i)}
           </div>
         </div>`;
       tile.addEventListener('click', () => {
@@ -626,12 +827,121 @@ const Peekaboo = (() => {
     render();
   });
 
+  /* ---- Admin: upload a photo or paste an image URL per hiding spot ---- */
+  async function loadCustomImages() {
+    const stored = await ImageStore.getAll();
+    Object.keys(stored).forEach(id => {
+      const value = stored[id];
+      if (customImages[id] && customImages[id].kind === 'blob') URL.revokeObjectURL(customImages[id].url);
+      if (typeof value === 'string') customImages[id] = { kind: 'url', url: value };
+      else customImages[id] = { kind: 'blob', url: URL.createObjectURL(value), blob: value };
+    });
+  }
+
+  function renderAdminList(listEl) {
+    housings.forEach(h => {
+      const hasCustom = !!customImages[h.id];
+      const row = document.createElement('div');
+      row.className = 'flex flex-col gap-space-xs p-space-sm rounded-lg bg-surface-container';
+      row.innerHTML = `
+        <div class="flex items-center gap-space-sm">
+          <div class="w-12 h-12 rounded-lg flex-shrink-0 overflow-hidden flex items-center justify-center ${hasCustom ? '' : h.bg}" data-thumb-wrap>
+            ${hasCustom ? `<img src="${customImages[h.id].url}" class="w-full h-full object-cover" referrerpolicy="no-referrer">` : `<span class="material-symbols-outlined text-[24px]">${h.icon}</span>`}
+          </div>
+          <div class="flex-1 flex flex-col min-w-0">
+            <span class="font-label-md text-label-md text-on-surface">${h.label}</span>
+            <span class="font-body-sm text-body-sm text-on-surface-variant" data-status>${hasCustom ? 'Custom photo set' : 'Using random default face'}</span>
+          </div>
+          <label class="w-10 h-10 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center flex-shrink-0 cursor-pointer" aria-label="Upload photo">
+            <span class="material-symbols-outlined text-[20px]">upload</span>
+            <input accept="image/*" class="hidden" data-upload type="file"/>
+          </label>
+          <button class="w-10 h-10 rounded-full bg-surface-container-highest text-on-surface-variant flex items-center justify-center flex-shrink-0" data-reset type="button" aria-label="Reset to default"><span class="material-symbols-outlined text-[20px]">restart_alt</span></button>
+        </div>
+        <div class="flex items-center gap-space-xs">
+          <input type="text" placeholder="Paste an image URL" data-url-input class="flex-1 min-w-0 border border-outline-variant rounded-lg px-space-sm py-1.5 font-body-sm text-body-sm bg-surface text-on-surface">
+          <button type="button" data-url-submit class="px-space-sm py-1.5 rounded-lg bg-primary text-on-primary font-label-sm text-label-sm flex-shrink-0">Use URL</button>
+        </div>
+        <p class="font-body-sm text-body-sm text-error hidden" data-url-error>Enter a valid image URL starting with http(s)://</p>`;
+
+      const thumbWrap = row.querySelector('[data-thumb-wrap]');
+      const statusEl = row.querySelector('[data-status]');
+
+      function refreshThumb() {
+        const c = customImages[h.id];
+        thumbWrap.className = `w-12 h-12 rounded-lg flex-shrink-0 overflow-hidden flex items-center justify-center ${c ? '' : h.bg}`;
+        thumbWrap.innerHTML = c
+          ? `<img src="${c.url}" class="w-full h-full object-cover" referrerpolicy="no-referrer">`
+          : `<span class="material-symbols-outlined text-[24px]">${h.icon}</span>`;
+        statusEl.textContent = c ? 'Custom photo set' : 'Using random default face';
+      }
+
+      row.querySelector('[data-upload]').addEventListener('change', async e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        try {
+          await ImageStore.set(h.id, file);
+          if (customImages[h.id] && customImages[h.id].kind === 'blob') URL.revokeObjectURL(customImages[h.id].url);
+          customImages[h.id] = { kind: 'blob', url: URL.createObjectURL(file), blob: file };
+          refreshThumb();
+          AudioFX.chime(700);
+        } catch (err) {
+          console.error('Failed to save photo for', h.id, err);
+          statusEl.textContent = 'Upload failed — try again';
+        }
+      });
+
+      row.querySelector('[data-url-submit]').addEventListener('click', async () => {
+        const input = row.querySelector('[data-url-input]');
+        const errorEl = row.querySelector('[data-url-error]');
+        const url = input.value.trim();
+        if (!/^https?:\/\//i.test(url)) {
+          errorEl.classList.remove('hidden');
+          return;
+        }
+        errorEl.classList.add('hidden');
+        try {
+          await ImageStore.set(h.id, url);
+          if (customImages[h.id] && customImages[h.id].kind === 'blob') URL.revokeObjectURL(customImages[h.id].url);
+          customImages[h.id] = { kind: 'url', url };
+          refreshThumb();
+          input.value = '';
+          AudioFX.chime(700);
+        } catch (err) {
+          console.error('Failed to save image URL for', h.id, err);
+          statusEl.textContent = 'Save failed — try again';
+        }
+      });
+
+      row.querySelector('[data-reset]').addEventListener('click', async () => {
+        if (!customImages[h.id]) return;
+        await ImageStore.remove(h.id);
+        if (customImages[h.id].kind === 'blob') URL.revokeObjectURL(customImages[h.id].url);
+        delete customImages[h.id];
+        refreshThumb();
+        AudioFX.chime(400);
+      });
+
+      listEl.appendChild(row);
+    });
+  }
+
+  adminOpenBtn.addEventListener('click', () => {
+    Admin.open({
+      title: 'Peekaboo Faces',
+      desc: 'Upload a photo or paste an image URL per hiding spot. Saved on this device only.',
+      render: renderAdminList,
+      onClose: render
+    });
+  });
+
   function start() {
     if (!built) {
       assignedFaces = pickFaces();
-      render();
       built = true;
     }
+    render();
+    loadCustomImages().then(render);
   }
 
   return { start };

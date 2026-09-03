@@ -90,7 +90,8 @@ tailwind.config = { darkMode: "class", theme: { extend: {
 <section id="game-zoo" class="screen fixed inset-0 hidden flex-col bg-surface overflow-y-auto">
   <header class="pt-safe bg-surface/90 backdrop-blur-xl shadow-[0_4px_20px_rgba(0,102,138,0.06)] flex items-center gap-space-sm h-20 px-margin-mobile flex-shrink-0 sticky top-0 z-20">
     <button class="back-btn min-w-touch-min min-h-touch-min h-12 w-12 rounded-full bg-surface-container-high text-primary flex items-center justify-center shadow-[0_4px_0_#ccdbf3] active:translate-y-1 active:shadow-none transition-transform" data-home type="button"><span class="material-symbols-outlined text-[26px]">arrow_back</span></button>
-    <span class="font-label-md text-label-md text-primary">Animal Zoo</span>
+    <span class="font-label-md text-label-md text-primary flex-1">Animal Zoo</span>
+    <button class="min-w-[44px] min-h-[44px] h-11 w-11 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center shadow-[0_3px_0_#ccdbf3] active:translate-y-1 active:shadow-none transition-transform" id="admin-open-btn" type="button" aria-label="Admin: manage animal sounds"><span class="material-symbols-outlined text-[20px]">admin_panel_settings</span></button>
   </header>
   <div class="flex flex-col w-full px-margin-mobile gap-space-md pb-safe pb-space-lg">
     <div class="flex flex-col items-center text-center gap-space-2xs mt-space-xs">
@@ -175,7 +176,8 @@ tailwind.config = { darkMode: "class", theme: { extend: {
 <section id="game-peekaboo" class="screen fixed inset-0 hidden flex-col bg-surface overflow-y-auto">
   <header class="pt-safe bg-surface/90 backdrop-blur-xl shadow-[0_4px_20px_rgba(0,102,138,0.06)] flex items-center gap-space-sm h-20 px-margin-mobile flex-shrink-0 sticky top-0 z-20">
     <button class="back-btn min-w-touch-min min-h-touch-min h-12 w-12 rounded-full bg-surface-container-high text-primary flex items-center justify-center shadow-[0_4px_0_#ccdbf3] active:translate-y-1 active:shadow-none transition-transform" data-home type="button"><span class="material-symbols-outlined text-[26px]">arrow_back</span></button>
-    <span class="font-label-md text-label-md text-primary">Peekaboo Pop</span>
+    <span class="font-label-md text-label-md text-primary flex-1">Peekaboo Pop</span>
+    <button class="min-w-[44px] min-h-[44px] h-11 w-11 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center shadow-[0_3px_0_#ccdbf3] active:translate-y-1 active:shadow-none transition-transform" id="peekaboo-admin-open-btn" type="button" aria-label="Admin: manage hiding-spot photos"><span class="material-symbols-outlined text-[20px]">admin_panel_settings</span></button>
   </header>
   <div class="flex flex-col w-full px-margin-mobile gap-space-md pb-safe pb-space-lg">
     <div class="w-full bg-surface-container-high rounded-xl p-space-md shadow-[0_6px_0_#ccdbf3] flex items-center gap-space-sm mt-space-xs">
@@ -198,6 +200,28 @@ tailwind.config = { darkMode: "class", theme: { extend: {
     </div>
   </div>
 </section>
+
+<!-- ADMIN MODAL (shared): manage Animal Zoo sounds + Peekaboo photos -->
+<div class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-margin-mobile" id="admin-modal">
+  <div class="bg-surface-container-lowest rounded-xl p-space-lg w-full max-w-md flex flex-col gap-space-md max-h-[85vh] overflow-y-auto">
+    <div class="flex flex-col gap-space-sm" id="admin-gate">
+      <h2 class="font-headline-sm text-headline-sm text-on-surface">Admin Access</h2>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">Enter the passcode to continue.</p>
+      <input autocomplete="off" class="border-2 border-outline-variant rounded-lg px-space-md py-space-sm font-body-md text-body-md text-on-surface bg-surface" id="admin-passcode-input" inputmode="numeric" placeholder="Passcode" type="password"/>
+      <p class="font-body-sm text-body-sm text-error hidden" id="admin-passcode-error">Incorrect passcode, try again.</p>
+      <div class="flex gap-space-sm">
+        <button class="flex-1 min-h-touch-min rounded-full bg-primary text-on-primary font-label-md text-label-md" id="admin-passcode-submit" type="button">Unlock</button>
+        <button class="min-h-touch-min px-space-md rounded-full bg-surface-container text-on-surface-variant font-label-md text-label-md" id="admin-gate-cancel" type="button">Cancel</button>
+      </div>
+    </div>
+    <div class="hidden flex-col gap-space-md" id="admin-panel">
+      <h2 class="font-headline-sm text-headline-sm text-on-surface" id="admin-panel-title">Admin</h2>
+      <p class="font-body-sm text-body-sm text-on-surface-variant" id="admin-panel-desc"></p>
+      <div class="flex flex-col gap-space-sm" id="admin-list"></div>
+      <button class="min-h-touch-min rounded-full bg-surface-container text-on-surface font-label-md text-label-md" id="admin-close-btn" type="button">Done</button>
+    </div>
+  </div>
+</div>
 
 <script src="app.js"></script>
 </body>
