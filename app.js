@@ -467,11 +467,12 @@ const Paint = (() => {
   const wandBtn = document.getElementById('wand-clear-btn');
   const colorBtns = document.querySelectorAll('.color-blob');
   const brushBtns = document.querySelectorAll('.brush-btn');
-  const fullscreenBtn = document.getElementById('paint-fullscreen-btn');
   const lockBtn = document.getElementById('paint-lock-btn');
   const lockRing = document.getElementById('paint-lock-ring');
   const lockIcon = document.getElementById('paint-lock-icon');
   const backBtn = document.getElementById('paint-back-btn');
+  const stageEl = document.getElementById('paint-stage');
+  const chromeEls = document.querySelectorAll('.paint-chrome');
 
   let activeColor = '#ffd53d';
   let activeBrush = 'rainbow';
@@ -480,7 +481,7 @@ const Paint = (() => {
   let raf = null;
   let inited = false;
 
-  /* ---- Fullscreen + kid-safe lock (hold 3s to unlock) ---- */
+  /* ---- Fullscreen kiosk mode: tap the lock to go fullscreen + hide all UI, hold 3s to exit ---- */
   const LOCK_CIRC = 131.95;
   const HOLD_MS = 3000;
   let locked = false;
@@ -503,18 +504,9 @@ const Paint = (() => {
       else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
     } catch (e) { /* ignore */ }
   }
-  function updateFullscreenIcon() {
-    fullscreenBtn.querySelector('.material-symbols-outlined').textContent = isFullscreen() ? 'fullscreen_exit' : 'fullscreen';
-  }
-
-  fullscreenBtn.addEventListener('click', () => {
-    if (locked) return;
-    if (isFullscreen()) exitFullscreen(); else enterFullscreen();
-  });
 
   ['fullscreenchange', 'webkitfullscreenchange'].forEach(ev => {
     document.addEventListener(ev, () => {
-      updateFullscreenIcon();
       if (locked && !isFullscreen()) enterFullscreen();
     });
   });
@@ -522,9 +514,25 @@ const Paint = (() => {
   function setLocked(v) {
     locked = v;
     lockIcon.textContent = locked ? 'lock' : 'lock_open';
+    chromeEls.forEach(el => el.classList.toggle('hidden', locked));
     backBtn.classList.toggle('hidden', locked);
-    fullscreenBtn.classList.toggle('opacity-40', locked);
-    fullscreenBtn.style.pointerEvents = locked ? 'none' : '';
+    stageEl.classList.toggle('kiosk', locked);
+    if (locked) {
+      lockBtn.style.width = '26px';
+      lockBtn.style.height = '26px';
+      lockBtn.style.top = '10px';
+      lockBtn.style.right = '10px';
+      lockBtn.style.opacity = '0.55';
+      lockIcon.style.fontSize = '13px';
+    } else {
+      lockBtn.style.width = '44px';
+      lockBtn.style.height = '44px';
+      lockBtn.style.top = '26px';
+      lockBtn.style.right = '20px';
+      lockBtn.style.opacity = '1';
+      lockIcon.style.fontSize = '22px';
+    }
+    resize();
   }
 
   function resetRing() {

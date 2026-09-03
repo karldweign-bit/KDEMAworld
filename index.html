@@ -115,20 +115,19 @@ tailwind.config = { darkMode: "class", theme: { extend: {
 
 <!-- RAINBOW PAINT -->
 <section id="game-paint" class="screen fixed inset-0 hidden flex-col bg-surface overflow-y-auto">
-  <header class="pt-safe bg-surface/90 backdrop-blur-xl shadow-[0_4px_20px_rgba(0,102,138,0.06)] flex items-center gap-space-sm h-20 px-margin-mobile flex-shrink-0 sticky top-0 z-20">
+  <header class="pt-safe bg-surface/90 backdrop-blur-xl shadow-[0_4px_20px_rgba(0,102,138,0.06)] flex items-center gap-space-sm h-20 px-margin-mobile flex-shrink-0 sticky top-0 z-20 paint-chrome" id="paint-header">
     <button class="back-btn min-w-touch-min min-h-touch-min h-12 w-12 rounded-full bg-surface-container-high text-primary flex items-center justify-center shadow-[0_4px_0_#ccdbf3] active:translate-y-1 active:shadow-none transition-transform" data-home id="paint-back-btn" type="button"><span class="material-symbols-outlined text-[26px]">arrow_back</span></button>
     <span class="font-label-md text-label-md text-primary flex-1">Rainbow Paint</span>
-    <button class="min-w-touch-min min-h-touch-min h-12 w-12 rounded-full bg-surface-container-high text-primary flex items-center justify-center shadow-[0_4px_0_#ccdbf3] active:translate-y-1 active:shadow-none transition-transform" id="paint-fullscreen-btn" type="button" aria-label="Toggle fullscreen"><span class="material-symbols-outlined text-[24px]">fullscreen</span></button>
-    <button class="relative min-w-touch-min min-h-touch-min h-12 w-12 rounded-full bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center shadow-[0_4px_0_#ffafd3] transition-transform" id="paint-lock-btn" type="button" aria-label="Lock screen, hold 3 seconds to unlock">
-      <svg class="absolute inset-0 w-full h-full -rotate-90 pointer-events-none" viewBox="0 0 48 48">
-        <circle cx="24" cy="24" fill="none" r="21" stroke="rgba(255,255,255,0.35)" stroke-width="4"></circle>
-        <circle cx="24" cy="24" fill="none" id="paint-lock-ring" r="21" stroke="#811057" stroke-dasharray="131.95" stroke-dashoffset="131.95" stroke-linecap="round" stroke-width="4"></circle>
-      </svg>
-      <span class="material-symbols-outlined text-[22px] relative z-10" id="paint-lock-icon">lock_open</span>
-    </button>
   </header>
+  <button class="fixed z-50 rounded-full bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center shadow-[0_3px_0_#ffafd3] transition-all" id="paint-lock-btn" style="top:26px; right:20px; width:44px; height:44px;" type="button" aria-label="Fullscreen paint lock, tap to lock, hold 3 seconds to unlock">
+    <svg class="absolute inset-0 w-full h-full -rotate-90 pointer-events-none" viewBox="0 0 48 48">
+      <circle cx="24" cy="24" fill="none" r="21" stroke="rgba(255,255,255,0.35)" stroke-width="4"></circle>
+      <circle cx="24" cy="24" fill="none" id="paint-lock-ring" r="21" stroke="#811057" stroke-dasharray="131.95" stroke-dashoffset="131.95" stroke-linecap="round" stroke-width="4"></circle>
+    </svg>
+    <span class="material-symbols-outlined relative z-10" id="paint-lock-icon" style="font-size:22px;">lock_open</span>
+  </button>
   <div class="flex flex-col w-full px-margin-mobile gap-space-md select-none pb-safe pb-space-lg">
-    <div class="flex items-center gap-space-xs overflow-x-auto py-space-xs -mx-margin-mobile px-margin-mobile no-scrollbar" id="brush-selector-row">
+    <div class="flex items-center gap-space-xs overflow-x-auto py-space-xs -mx-margin-mobile px-margin-mobile no-scrollbar paint-chrome" id="brush-selector-row">
       <button class="brush-btn flex items-center gap-space-xs px-space-md py-space-xs rounded-full bg-primary text-on-primary shadow-[0_6px_0_#004c69] active:translate-y-1 active:shadow-[0_2px_0_#004c69] transition-transform flex-shrink-0 min-h-[52px]" data-brush="rainbow" type="button">
         <span class="material-symbols-outlined text-[24px]">flare</span><span class="font-label-md text-label-md">Rainbow Glow</span>
       </button>
@@ -142,7 +141,7 @@ tailwind.config = { darkMode: "class", theme: { extend: {
         <span class="material-symbols-outlined text-[24px]">pets</span><span class="font-label-md text-label-md">Tiny Paws</span>
       </button>
     </div>
-    <div class="relative w-full rounded-xl overflow-hidden shadow-[0_12px_40px_rgba(0,102,138,0.15)] bg-[#1a1233] aspect-[4/5] max-h-[480px] flex items-center justify-center touch-none select-none">
+    <div class="relative w-full rounded-xl overflow-hidden shadow-[0_12px_40px_rgba(0,102,138,0.15)] bg-[#1a1233] aspect-[4/5] max-h-[480px] flex items-center justify-center touch-none select-none" id="paint-stage">
       <div class="absolute inset-0 pointer-events-none opacity-40 bg-[radial-gradient(circle_at_20%_20%,#a43073_0%,transparent_50%),radial-gradient(circle_at_80%_80%,#00668a_0%,transparent_50%)]"></div>
       <canvas class="w-full h-full block relative z-10 touch-none" id="sparkle-canvas"></canvas>
       <div class="absolute pointer-events-none z-20 flex flex-col items-center justify-center text-center gap-space-xs px-space-lg transition-opacity duration-700" id="canvas-hint">
@@ -153,7 +152,7 @@ tailwind.config = { darkMode: "class", theme: { extend: {
       </div>
       <div class="absolute inset-0 pointer-events-none z-30 opacity-0 transition-opacity duration-500 overflow-hidden" id="sparkle-shower"></div>
     </div>
-    <div class="flex flex-col gap-space-xs">
+    <div class="flex flex-col gap-space-xs paint-chrome" id="paint-colors-section">
       <div class="flex items-center justify-between px-space-xs">
         <span class="font-label-md text-label-md text-on-surface flex items-center gap-1"><span class="material-symbols-outlined text-[20px] text-secondary-container">palette</span>Color Blobs</span>
       </div>
@@ -166,7 +165,7 @@ tailwind.config = { darkMode: "class", theme: { extend: {
         <button aria-label="Pure White Sparkle" class="color-blob relative min-w-touch-min min-h-touch-min w-14 h-14 rounded-full bg-surface-container-lowest shadow-[0_8px_0_#bdc8d1] active:translate-y-1 active:shadow-[0_2px_0_#bdc8d1] transition-all flex items-center justify-center" data-color="#ffffff" type="button"><span class="material-symbols-outlined text-primary text-[24px] hidden select-indicator">check</span></button>
       </div>
     </div>
-    <button class="min-h-touch-min px-space-lg rounded-full bg-tertiary-container text-on-tertiary-container flex items-center justify-center gap-space-xs shadow-[0_8px_0_#811057] active:translate-y-1.5 active:shadow-[0_2px_0_#811057] transition-all self-center w-full" id="wand-clear-btn" type="button">
+    <button class="min-h-touch-min px-space-lg rounded-full bg-tertiary-container text-on-tertiary-container flex items-center justify-center gap-space-xs shadow-[0_8px_0_#811057] active:translate-y-1.5 active:shadow-[0_2px_0_#811057] transition-all self-center w-full paint-chrome" id="wand-clear-btn" type="button">
       <span class="material-symbols-outlined text-[28px]">auto_fix_high</span><span class="font-label-lg text-label-lg">Clear</span>
     </button>
   </div>

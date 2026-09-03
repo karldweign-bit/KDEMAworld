@@ -42,3 +42,15 @@ html, body { height: 100%; touch-action: manipulation; }
   0% { transform: translateY(0) scale(1); opacity: 1; }
   100% { transform: translateY(-70px) scale(1.4); opacity: 0; }
 }
+
+/* Rainbow Paint fullscreen kiosk mode: canvas fills the viewport, all other UI hidden */
+#paint-stage.kiosk {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+  border-radius: 0 !important;
+  z-index: 40;
+}
