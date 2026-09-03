@@ -258,7 +258,7 @@ const Admin = (() => {
   const descEl = document.getElementById('admin-panel-desc');
   const listEl = document.getElementById('admin-list');
 
-  const ADMIN_PASSCODE = '1234';
+  const ADMIN_PASSCODE = '090515';
   let currentConfig = null;
 
   function open(config) {
