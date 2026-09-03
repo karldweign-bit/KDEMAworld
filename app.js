@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
 
-const APP_VERSION = "KW_SYS_V.1.1";
+const APP_VERSION = "KW_SYS_V.1.2";
 console.log(APP_VERSION);
 
 window.__THREE_DEBUG__ = { THREE };
@@ -134,18 +134,40 @@ function applyTexture() {
 }
 applyTexture();
 
+// --- Shape / resolution ---
+
+// Four resolution tiers, roughly matched in vertex-count order-of-magnitude
+// between the two base shapes. Capped at icosahedron detail 15 (2562 verts,
+// 5120 tris) / box 20 segments (~2400 verts) rather than going higher -- a
+// plain linear per-frame scan over a few thousand verts is comfortably
+// cheap on any modern JS engine (measured, not guessed, during this
+// build), so the ceiling here is a deliberate safety margin for
+// older/budget Android rather than a measured hard limit.
+//
+// Note: three.js's IcosahedronGeometry "detail" is a subdivision-frequency
+// parameter, not an exponential recursion depth -- unique vertex count
+// after welding is 10*(detail+1)^2 + 2, so hitting ~42/162/642/2562 verts
+// needs detail = 1/3/7/15 (not 1/2/3/4, which only reaches 42/92/162/252).
+const DETAIL_LEVELS = [
+  { icosahedronDetail: 1, boxSegments: 2 },
+  { icosahedronDetail: 3, boxSegments: 4 },
+  { icosahedronDetail: 7, boxSegments: 8 },
+  { icosahedronDetail: 15, boxSegments: 20 },
+];
+
 let mesh = null;
 let basePositions = null; // Float32Array snapshot of the un-sculpted shape
 let currentShapeKind = "ball";
+let currentDetailLevel = 1;
 const MAX_DISPLACE = 0.9;
-const BRUSH_RADIUS = 0.85;
 
-function buildGeometry(kind) {
+function buildGeometry(kind, level) {
+  const tier = DETAIL_LEVELS[level];
   let geo;
   if (kind === "ball") {
-    geo = new THREE.IcosahedronGeometry(1, 1);
+    geo = new THREE.IcosahedronGeometry(1, tier.icosahedronDetail);
   } else {
-    geo = new THREE.BoxGeometry(1.4, 1.4, 1.4, 2, 2, 2);
+    geo = new THREE.BoxGeometry(1.4, 1.4, 1.4, tier.boxSegments, tier.boxSegments, tier.boxSegments);
   }
   // Drop uv/normal before welding so merge hashes on POSITION only.
   // (uvs differ per-face even at shared corners/edges, e.g. on a box,
@@ -178,16 +200,109 @@ function addSphericalUVs(geo) {
   geo.setAttribute("uv", new THREE.BufferAttribute(uv, 2));
 }
 
-function setShape(kind) {
+// Carries the current sculpt over onto a rebuilt (higher/lower-res)
+// geometry: for each vertex in the new base shape, find the nearest
+// vertex in the old base shape and copy its current displacement
+// (oldLive - oldBase) onto the new vertex. Grid-bucketed so this stays
+// fast even at a couple thousand verts on each side -- this runs once
+// per detail-slider change (not per frame), but a naive O(N*M) brute
+// force at max resolution (~2500x2500) would still be a visible stall,
+// so it's worth the extra bit of code.
+function resampleDisplacements(oldBase, oldLive, newBase) {
+  const oldCount = oldBase.length / 3;
+  const newCount = newBase.length / 3;
+  const cellSize = 0.15;
+  const key = (x, y, z) => `${Math.floor(x / cellSize)}_${Math.floor(y / cellSize)}_${Math.floor(z / cellSize)}`;
+
+  const grid = new Map();
+  for (let i = 0; i < oldCount; i++) {
+    const k = key(oldBase[i * 3], oldBase[i * 3 + 1], oldBase[i * 3 + 2]);
+    let bucket = grid.get(k);
+    if (!bucket) {
+      bucket = [];
+      grid.set(k, bucket);
+    }
+    bucket.push(i);
+  }
+
+  function findNearest(x, y, z) {
+    const ix = Math.floor(x / cellSize);
+    const iy = Math.floor(y / cellSize);
+    const iz = Math.floor(z / cellSize);
+    let best = -1;
+    let bestD = Infinity;
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dz = -1; dz <= 1; dz++) {
+          const bucket = grid.get(`${ix + dx}_${iy + dy}_${iz + dz}`);
+          if (!bucket) continue;
+          for (const idx of bucket) {
+            const ddx = oldBase[idx * 3] - x;
+            const ddy = oldBase[idx * 3 + 1] - y;
+            const ddz = oldBase[idx * 3 + 2] - z;
+            const d = ddx * ddx + ddy * ddy + ddz * ddz;
+            if (d < bestD) {
+              bestD = d;
+              best = idx;
+            }
+          }
+        }
+      }
+    }
+    if (best !== -1) return best;
+    // Rare fallback (only if the 3x3x3 neighborhood was empty): brute
+    // force over the old mesh, which is always modest in size (<=2562).
+    for (let idx = 0; idx < oldCount; idx++) {
+      const ddx = oldBase[idx * 3] - x;
+      const ddy = oldBase[idx * 3 + 1] - y;
+      const ddz = oldBase[idx * 3 + 2] - z;
+      const d = ddx * ddx + ddy * ddy + ddz * ddz;
+      if (d < bestD) {
+        bestD = d;
+        best = idx;
+      }
+    }
+    return best;
+  }
+
+  const newLive = new Float32Array(newBase.length);
+  for (let j = 0; j < newCount; j++) {
+    const nx = newBase[j * 3];
+    const ny = newBase[j * 3 + 1];
+    const nz = newBase[j * 3 + 2];
+    const nearest = findNearest(nx, ny, nz);
+    const dx = oldLive[nearest * 3] - oldBase[nearest * 3];
+    const dy = oldLive[nearest * 3 + 1] - oldBase[nearest * 3 + 1];
+    const dz = oldLive[nearest * 3 + 2] - oldBase[nearest * 3 + 2];
+    newLive[j * 3] = nx + dx;
+    newLive[j * 3 + 1] = ny + dy;
+    newLive[j * 3 + 2] = nz + dz;
+  }
+  return newLive;
+}
+
+function setShape(kind, level, preserveSculpt) {
+  const newGeo = buildGeometry(kind, level);
+  const freshBase = newGeo.attributes.position.array.slice();
+
+  if (preserveSculpt && mesh && basePositions) {
+    const oldLive = mesh.geometry.attributes.position.array;
+    const resampled = resampleDisplacements(basePositions, oldLive, freshBase);
+    newGeo.attributes.position.array.set(resampled);
+    newGeo.attributes.position.needsUpdate = true;
+    newGeo.computeVertexNormals();
+  }
+
   if (mesh) {
     scene.remove(mesh);
     mesh.geometry.dispose();
   }
-  const geo = buildGeometry(kind);
-  mesh = new THREE.Mesh(geo, material);
+  mesh = new THREE.Mesh(newGeo, material);
   scene.add(mesh);
-  basePositions = geo.attributes.position.array.slice();
+
+  basePositions = freshBase;
   currentShapeKind = kind;
+  currentDetailLevel = level;
   window.__mesh = mesh;
 }
 
@@ -199,7 +314,7 @@ function resetSculpt() {
   mesh.geometry.computeVertexNormals();
 }
 
-setShape("ball");
+setShape("ball", currentDetailLevel, false);
 
 // --- Sculpt interaction ---
 
@@ -207,11 +322,90 @@ const raycaster = new THREE.Raycaster();
 const pointerNDC = new THREE.Vector2();
 
 const SCULPT_SENSITIVITY = 0.006; // screen pixels of vertical drag -> world units of push
+const BRUSH_LONG = 1.6; // elongation multiplier for the long axis of rectangle/oval tips
+const BRUSH_SHORT = 0.6;
+
+let brushRadius = 0.85;
+let brushHardness = 0; // 0 = soft falloff across the whole radius, 1 = flat "hard" top with a sharp rim
+let brushShape = "circle"; // circle | square | rectangle | oval
 
 let dragging = false;
 let centerIndex = -1;
 let centerNormal = new THREE.Vector3();
+let centerTangentU = new THREE.Vector3();
+let centerTangentV = new THREE.Vector3();
 let lastClientY = 0;
+
+const WORLD_UP = new THREE.Vector3(0, 1, 0);
+const WORLD_RIGHT = new THREE.Vector3(1, 0, 0);
+
+function buildTangentBasis(normal, outU, outV) {
+  const ref = Math.abs(normal.y) < 0.99 ? WORLD_UP : WORLD_RIGHT;
+  outU.crossVectors(ref, normal).normalize();
+  outV.crossVectors(normal, outU).normalize();
+}
+
+// t <= 1 means "inside the brush footprint"; the footprint's shape in the
+// (u, v) tangent plane is what makes the tip read as circle/square/etc.
+function brushFootprint(u, v, radius, shapeName) {
+  switch (shapeName) {
+    case "square":
+      return Math.max(Math.abs(u), Math.abs(v)) / radius;
+    case "rectangle":
+      return Math.max(Math.abs(u) / (radius * BRUSH_LONG), Math.abs(v) / (radius * BRUSH_SHORT));
+    case "oval": {
+      const a = radius * BRUSH_LONG;
+      const b = radius * BRUSH_SHORT;
+      return Math.sqrt((u / a) * (u / a) + (v / b) * (v / b));
+    }
+    case "circle":
+    default:
+      return Math.sqrt(u * u + v * v) / radius;
+  }
+}
+
+// hardness 0 -> soft gradual falloff across the whole radius (matches the
+// original fixed brush feel); hardness 1 -> flat full-strength plateau out
+// to 90% of the radius, then a sharp-ish falloff in the last 10%.
+function brushWeight(t, hardness) {
+  if (t > 1) return 0;
+  const edge = hardness * 0.9;
+  if (t <= edge) return 1;
+  const localT = (t - edge) / (1 - edge);
+  return (1 - localT) * (1 - localT);
+}
+
+// Scratch vectors reused across every vertex of every brush application so
+// sculpting at a couple thousand verts doesn't allocate thousands of
+// throwaway Vector3s per frame (that GC pressure is a real jank risk on
+// weaker phones even though the plain math loop itself is cheap).
+const scratchBasePt = new THREE.Vector3();
+const scratchOffset = new THREE.Vector3();
+const scratchV = new THREE.Vector3();
+const scratchDiff = new THREE.Vector3();
+
+function applyBrush(pos, refCenter, refNormal, tangentU, tangentV, pushAmount) {
+  for (let i = 0; i < pos.count; i++) {
+    scratchBasePt.set(basePositions[i * 3], basePositions[i * 3 + 1], basePositions[i * 3 + 2]);
+    scratchOffset.copy(scratchBasePt).sub(refCenter);
+
+    const u = scratchOffset.dot(tangentU);
+    const v = scratchOffset.dot(tangentV);
+    const t = brushFootprint(u, v, brushRadius, brushShape);
+    const weight = brushWeight(t, brushHardness);
+    if (weight <= 0) continue;
+
+    scratchV.fromBufferAttribute(pos, i);
+    scratchV.addScaledVector(refNormal, pushAmount * weight);
+
+    scratchDiff.copy(scratchV).sub(scratchBasePt);
+    if (scratchDiff.length() > MAX_DISPLACE) {
+      scratchDiff.setLength(MAX_DISPLACE);
+      scratchV.copy(scratchBasePt).add(scratchDiff);
+    }
+    pos.setXYZ(i, scratchV.x, scratchV.y, scratchV.z);
+  }
+}
 
 function updatePointerNDC(clientX, clientY) {
   const rect = canvas.getBoundingClientRect();
@@ -246,12 +440,18 @@ function onPointerDown(clientX, clientY) {
 
   const normalAttr = mesh.geometry.attributes.normal;
   centerNormal.fromBufferAttribute(normalAttr, centerIndex).normalize();
+  buildTangentBasis(centerNormal, centerTangentU, centerTangentV);
 
   lastClientY = clientY;
 
   dragging = true;
   controls.enabled = false;
 }
+
+const mirrorCenter = new THREE.Vector3();
+const mirrorNormal = new THREE.Vector3();
+const mirrorTangentU = new THREE.Vector3();
+const mirrorTangentV = new THREE.Vector3();
 
 function onPointerMove(clientX, clientY) {
   if (!dragging) return;
@@ -271,40 +471,15 @@ function onPointerMove(clientX, clientY) {
     basePositions[centerIndex * 3 + 2]
   );
 
-  const v = new THREE.Vector3();
-  const basePt = new THREE.Vector3();
-
-  function applyBrush(refCenter, refNormal) {
-    for (let i = 0; i < pos.count; i++) {
-      basePt.set(
-        basePositions[i * 3],
-        basePositions[i * 3 + 1],
-        basePositions[i * 3 + 2]
-      );
-      const dist = basePt.distanceTo(refCenter);
-      if (dist > BRUSH_RADIUS) continue;
-      const weight = Math.pow(1 - dist / BRUSH_RADIUS, 2);
-
-      v.fromBufferAttribute(pos, i);
-      v.addScaledVector(refNormal, pushAmount * weight);
-
-      const diff = v.clone().sub(basePt);
-      if (diff.length() > MAX_DISPLACE) {
-        diff.setLength(MAX_DISPLACE);
-        v.copy(basePt).add(diff);
-      }
-      pos.setXYZ(i, v.x, v.y, v.z);
-    }
-  }
-
-  applyBrush(centerBase, centerNormal);
+  applyBrush(pos, centerBase, centerNormal, centerTangentU, centerTangentV, pushAmount);
 
   if (mirrorEnabled) {
-    const mirrorCenter = centerBase.clone();
+    mirrorCenter.copy(centerBase);
     mirrorCenter.x *= -1;
-    const mirrorNormal = centerNormal.clone();
+    mirrorNormal.copy(centerNormal);
     mirrorNormal.x *= -1;
-    applyBrush(mirrorCenter, mirrorNormal);
+    buildTangentBasis(mirrorNormal, mirrorTangentU, mirrorTangentV);
+    applyBrush(pos, mirrorCenter, mirrorNormal, mirrorTangentU, mirrorTangentV, pushAmount);
   }
 
   pos.needsUpdate = true;
@@ -328,19 +503,29 @@ const btnBall = document.getElementById("btn-ball");
 const btnBlock = document.getElementById("btn-block");
 const btnReset = document.getElementById("btn-reset");
 const chkMirror = document.getElementById("chk-mirror");
+const detailSlider = document.getElementById("detail-slider");
+const detailValueEl = document.getElementById("detail-value");
+const brushSizeSlider = document.getElementById("brush-size");
+const brushHardnessSlider = document.getElementById("brush-hardness");
 
 chkMirror.addEventListener("change", () => {
   mirrorEnabled = chkMirror.checked;
   mirrorPlane.visible = mirrorEnabled;
 });
 
+function updateDetailLabel() {
+  detailValueEl.textContent = `${window.__lastVertexCount} pts`;
+}
+
 // Shared select-helpers so both direct UI clicks and loading a saved
 // character (further down) update state + button highlighting the same way.
 
-function selectShape(kind) {
-  setShape(kind);
+function selectShape(kind, level = currentDetailLevel, preserveSculpt = false) {
+  setShape(kind, level, preserveSculpt);
   btnBall.classList.toggle("active", kind === "ball");
   btnBlock.classList.toggle("active", kind === "block");
+  detailSlider.value = String(level);
+  updateDetailLabel();
 }
 
 function selectColor(hex) {
@@ -359,9 +544,31 @@ function selectPattern(pattern) {
   });
 }
 
+function selectBrushShape(shapeName) {
+  brushShape = shapeName;
+  document.querySelectorAll(".shape-btn").forEach((b) => {
+    b.classList.toggle("active", b.dataset.shape === shapeName);
+  });
+}
+
 btnBall.addEventListener("click", () => selectShape("ball"));
 btnBlock.addEventListener("click", () => selectShape("block"));
 btnReset.addEventListener("click", resetSculpt);
+
+detailSlider.addEventListener("input", () => {
+  selectShape(currentShapeKind, Number(detailSlider.value), true);
+});
+
+brushSizeSlider.addEventListener("input", () => {
+  brushRadius = Number(brushSizeSlider.value);
+});
+brushHardnessSlider.addEventListener("input", () => {
+  brushHardness = Number(brushHardnessSlider.value);
+});
+
+document.querySelectorAll(".shape-btn").forEach((btn) => {
+  btn.addEventListener("click", () => selectBrushShape(btn.dataset.shape));
+});
 
 const swatchContainer = document.getElementById("color-swatches");
 COLORS.forEach((hex) => {
@@ -377,6 +584,8 @@ COLORS.forEach((hex) => {
 document.querySelectorAll(".pattern-btn").forEach((btn) => {
   btn.addEventListener("click", () => selectPattern(btn.dataset.pattern));
 });
+
+updateDetailLabel(); // reflect the initial setShape() call above
 
 // --- Save / load characters (localStorage gallery) ---
 
@@ -414,6 +623,7 @@ function captureCharacter() {
   return {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     shapeKind: currentShapeKind,
+    detailLevel: currentDetailLevel,
     positions: Array.from(mesh.geometry.attributes.position.array),
     color: selectedColor,
     pattern: selectedPattern,
@@ -422,7 +632,7 @@ function captureCharacter() {
 }
 
 function loadCharacter(char) {
-  selectShape(char.shapeKind);
+  selectShape(char.shapeKind, char.detailLevel ?? 0, false);
   const pos = mesh.geometry.attributes.position;
   pos.array.set(new Float32Array(char.positions));
   pos.needsUpdate = true;

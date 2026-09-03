@@ -95,6 +95,70 @@ html, body {
   pointer-events: none;
 }
 
+#detail-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  pointer-events: auto;
+  background: #2a1b52;
+  border-radius: 999px;
+  padding: 8px 16px;
+}
+
+#detail-row label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffd166;
+  white-space: nowrap;
+}
+
+#brush-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  pointer-events: auto;
+}
+
+#brush-row label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f4f0ff;
+  white-space: nowrap;
+}
+
+#detail-row input[type="range"],
+#brush-row input[type="range"] {
+  flex: 1;
+  min-width: 90px;
+  accent-color: #ffd166;
+  cursor: pointer;
+}
+
+#brush-shape-buttons {
+  display: flex;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.shape-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  background: #3a2470;
+  color: #f4f0ff;
+  cursor: pointer;
+}
+
+.shape-btn.active {
+  background: #ffd166;
+  color: #402d00;
+}
+
 #color-swatches {
   display: flex;
   gap: 8px;
