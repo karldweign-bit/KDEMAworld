@@ -140,9 +140,13 @@ tailwind.config = { darkMode: "class", theme: { extend: {
       <button class="brush-btn flex items-center gap-space-xs px-space-md py-space-xs rounded-full bg-surface-container text-on-surface-variant shadow-[0_6px_0_#ccdbf3] active:translate-y-1 active:shadow-[0_2px_0_#ccdbf3] transition-transform flex-shrink-0 min-h-[52px]" data-brush="paws" type="button">
         <span class="material-symbols-outlined text-[24px]">pets</span><span class="font-label-md text-label-md">Tiny Paws</span>
       </button>
+      <button class="brush-btn flex items-center gap-space-xs px-space-md py-space-xs rounded-full bg-surface-container text-on-surface-variant shadow-[0_6px_0_#ccdbf3] active:translate-y-1 active:shadow-[0_2px_0_#ccdbf3] transition-transform flex-shrink-0 min-h-[52px]" data-brush="fluid" id="fluid-brush-btn" type="button">
+        <span class="material-symbols-outlined text-[24px]">water_drop</span><span class="font-label-md text-label-md">Fluid Flow</span>
+      </button>
     </div>
     <div class="relative w-full rounded-xl overflow-hidden shadow-[0_12px_40px_rgba(0,102,138,0.15)] bg-[#1a1233] aspect-[4/5] max-h-[480px] flex items-center justify-center touch-none select-none" id="paint-stage">
       <div class="absolute inset-0 pointer-events-none opacity-40 bg-[radial-gradient(circle_at_20%_20%,#a43073_0%,transparent_50%),radial-gradient(circle_at_80%_80%,#00668a_0%,transparent_50%)]"></div>
+      <canvas class="w-full h-full block absolute inset-0 touch-none hidden" id="fluid-canvas"></canvas>
       <canvas class="w-full h-full block relative z-10 touch-none" id="sparkle-canvas"></canvas>
       <div class="absolute pointer-events-none z-20 flex flex-col items-center justify-center text-center gap-space-xs px-space-lg transition-opacity duration-700" id="canvas-hint">
         <div class="w-20 h-20 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center shadow-[0_0_30px_rgba(255,255,255,0.2)] animate-pulse">
