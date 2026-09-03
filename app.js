@@ -277,6 +277,11 @@ const Paint = (() => {
   const wandBtn = document.getElementById('wand-clear-btn');
   const colorBtns = document.querySelectorAll('.color-blob');
   const brushBtns = document.querySelectorAll('.brush-btn');
+  const fullscreenBtn = document.getElementById('paint-fullscreen-btn');
+  const lockBtn = document.getElementById('paint-lock-btn');
+  const lockRing = document.getElementById('paint-lock-ring');
+  const lockIcon = document.getElementById('paint-lock-icon');
+  const backBtn = document.getElementById('paint-back-btn');
 
   let activeColor = '#ffd53d';
   let activeBrush = 'rainbow';
@@ -284,6 +289,93 @@ const Paint = (() => {
   let hue = 0;
   let raf = null;
   let inited = false;
+
+  /* ---- Fullscreen + kid-safe lock (hold 3s to unlock) ---- */
+  const LOCK_CIRC = 131.95;
+  const HOLD_MS = 3000;
+  let locked = false;
+  let holdRaf = null;
+  let holdStart = null;
+
+  function isFullscreen() {
+    return !!(document.fullscreenElement || document.webkitFullscreenElement);
+  }
+  function enterFullscreen() {
+    const el = document.documentElement;
+    try {
+      if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    } catch (e) { /* fullscreen unsupported, ignore */ }
+  }
+  function exitFullscreen() {
+    try {
+      if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+    } catch (e) { /* ignore */ }
+  }
+  function updateFullscreenIcon() {
+    fullscreenBtn.querySelector('.material-symbols-outlined').textContent = isFullscreen() ? 'fullscreen_exit' : 'fullscreen';
+  }
+
+  fullscreenBtn.addEventListener('click', () => {
+    if (locked) return;
+    if (isFullscreen()) exitFullscreen(); else enterFullscreen();
+  });
+
+  ['fullscreenchange', 'webkitfullscreenchange'].forEach(ev => {
+    document.addEventListener(ev, () => {
+      updateFullscreenIcon();
+      if (locked && !isFullscreen()) enterFullscreen();
+    });
+  });
+
+  function setLocked(v) {
+    locked = v;
+    lockIcon.textContent = locked ? 'lock' : 'lock_open';
+    backBtn.classList.toggle('hidden', locked);
+    fullscreenBtn.classList.toggle('opacity-40', locked);
+    fullscreenBtn.style.pointerEvents = locked ? 'none' : '';
+  }
+
+  function resetRing() {
+    lockRing.setAttribute('stroke-dashoffset', String(LOCK_CIRC));
+  }
+
+  function cancelHold() {
+    cancelAnimationFrame(holdRaf);
+    holdRaf = null;
+    holdStart = null;
+    resetRing();
+  }
+
+  function startHold() {
+    holdStart = performance.now();
+    const step = (t) => {
+      const p = Math.min((t - holdStart) / HOLD_MS, 1);
+      lockRing.setAttribute('stroke-dashoffset', String(LOCK_CIRC * (1 - p)));
+      if (p >= 1) {
+        setLocked(false);
+        exitFullscreen();
+        AudioFX.chime(900);
+        resetRing();
+        holdRaf = null;
+        return;
+      }
+      holdRaf = requestAnimationFrame(step);
+    };
+    holdRaf = requestAnimationFrame(step);
+  }
+
+  lockBtn.addEventListener('click', () => {
+    if (locked) return;
+    setLocked(true);
+    enterFullscreen();
+    AudioFX.chime(500);
+  });
+  lockBtn.addEventListener('pointerdown', () => { if (locked) startHold(); });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => {
+    lockBtn.addEventListener(ev, () => { if (locked) cancelHold(); });
+  });
 
   function resize() {
     const rect = canvas.getBoundingClientRect();

@@ -115,8 +115,16 @@ tailwind.config = { darkMode: "class", theme: { extend: {
 <!-- RAINBOW PAINT -->
 <section id="game-paint" class="screen fixed inset-0 hidden flex-col bg-surface overflow-y-auto">
   <header class="pt-safe bg-surface/90 backdrop-blur-xl shadow-[0_4px_20px_rgba(0,102,138,0.06)] flex items-center gap-space-sm h-20 px-margin-mobile flex-shrink-0 sticky top-0 z-20">
-    <button class="back-btn min-w-touch-min min-h-touch-min h-12 w-12 rounded-full bg-surface-container-high text-primary flex items-center justify-center shadow-[0_4px_0_#ccdbf3] active:translate-y-1 active:shadow-none transition-transform" data-home type="button"><span class="material-symbols-outlined text-[26px]">arrow_back</span></button>
-    <span class="font-label-md text-label-md text-primary">Rainbow Paint</span>
+    <button class="back-btn min-w-touch-min min-h-touch-min h-12 w-12 rounded-full bg-surface-container-high text-primary flex items-center justify-center shadow-[0_4px_0_#ccdbf3] active:translate-y-1 active:shadow-none transition-transform" data-home id="paint-back-btn" type="button"><span class="material-symbols-outlined text-[26px]">arrow_back</span></button>
+    <span class="font-label-md text-label-md text-primary flex-1">Rainbow Paint</span>
+    <button class="min-w-touch-min min-h-touch-min h-12 w-12 rounded-full bg-surface-container-high text-primary flex items-center justify-center shadow-[0_4px_0_#ccdbf3] active:translate-y-1 active:shadow-none transition-transform" id="paint-fullscreen-btn" type="button" aria-label="Toggle fullscreen"><span class="material-symbols-outlined text-[24px]">fullscreen</span></button>
+    <button class="relative min-w-touch-min min-h-touch-min h-12 w-12 rounded-full bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center shadow-[0_4px_0_#ffafd3] transition-transform" id="paint-lock-btn" type="button" aria-label="Lock screen, hold 3 seconds to unlock">
+      <svg class="absolute inset-0 w-full h-full -rotate-90 pointer-events-none" viewBox="0 0 48 48">
+        <circle cx="24" cy="24" fill="none" r="21" stroke="rgba(255,255,255,0.35)" stroke-width="4"></circle>
+        <circle cx="24" cy="24" fill="none" id="paint-lock-ring" r="21" stroke="#811057" stroke-dasharray="131.95" stroke-dashoffset="131.95" stroke-linecap="round" stroke-width="4"></circle>
+      </svg>
+      <span class="material-symbols-outlined text-[22px] relative z-10" id="paint-lock-icon">lock_open</span>
+    </button>
   </header>
   <div class="flex flex-col w-full px-margin-mobile gap-space-md select-none pb-safe pb-space-lg">
     <div class="flex items-center gap-space-xs overflow-x-auto py-space-xs -mx-margin-mobile px-margin-mobile no-scrollbar" id="brush-selector-row">
