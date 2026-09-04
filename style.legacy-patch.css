@@ -1,0 +1,33 @@
+/* Legacy-browser fallbacks (targets iOS 9.x Safari, e.g. iPad 4, which lacks
+   CSS Grid and the aspect-ratio property). Modern browsers ignore the
+   fallback branch entirely via @supports feature queries, so this file is
+   safe to load unconditionally for every device. */
+
+/* CSS Grid fallback: old engines don't recognize `display:grid` as a valid
+   value and silently keep the flex declaration that precedes it. Modern
+   browsers apply grid (the later, understood value wins). */
+.grid {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: flex;
+  flex-wrap: wrap;
+  display: grid;
+}
+@supports not (display: grid) {
+  .grid-cols-2 > * {
+    width: calc(50% - 0.5rem);
+    box-sizing: border-box;
+  }
+}
+
+/* aspect-ratio fallback: without it these elements would collapse to 0
+   height. min-height (rather than the padding-percent trick) is used
+   because their children already rely on percentage height/width. */
+@supports not (aspect-ratio: 1 / 1) {
+  .aspect-square {
+    min-height: 300px;
+  }
+  .aspect-\[4\/5\] {
+    min-height: 400px;
+  }
+}

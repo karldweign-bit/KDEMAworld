@@ -1,10 +1,12 @@
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const CACHE_NAME = `kdema-playtime-${CACHE_VERSION}`;
 
 const APP_SHELL = [
   './',
   './index.html',
   './style.css',
+  './style.tailwind-static.css',
+  './style.legacy-patch.css',
   './app.js',
   './manifest.json',
   './icons/icon-192.png',
