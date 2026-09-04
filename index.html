@@ -45,6 +45,10 @@
       <span class="material-symbols-outlined text-[56px]">visibility</span>
       <span class="font-label-lg text-label-lg">Peekaboo Pop</span>
     </button>
+    <button class="game-card flex flex-col items-center justify-center gap-space-xs rounded-xl bg-tertiary-fixed text-on-tertiary-fixed shadow-[0_10px_0_#ffafd3,0_16px_24px_rgba(164,48,115,0.2)] active:translate-y-2 active:shadow-[0_2px_0_#ffafd3] transition-all" data-game="slidepuzzle" type="button">
+      <span class="material-symbols-outlined text-[56px]">extension</span>
+      <span class="font-label-lg text-label-lg">Sliding Tile Puzzle</span>
+    </button>
   </div>
 </section>
 
@@ -202,6 +206,59 @@
     </div>
   </div>
 </section>
+
+<!-- SLIDING TILE PUZZLE -->
+<section id="game-slidepuzzle" class="screen fixed inset-0 hidden flex-col bg-surface overflow-y-auto">
+  <header class="pt-safe bg-surface/90 backdrop-blur-xl shadow-[0_4px_20px_rgba(0,102,138,0.06)] flex items-center gap-space-sm h-20 px-margin-mobile flex-shrink-0 sticky top-0 z-20">
+    <button class="back-btn min-w-touch-min min-h-touch-min h-12 w-12 rounded-full bg-surface-container-high text-primary flex items-center justify-center shadow-[0_4px_0_#ccdbf3] active:translate-y-1 active:shadow-none transition-transform" id="puzzle-back-btn" type="button"><span class="material-symbols-outlined text-[26px]">arrow_back</span></button>
+    <span class="font-label-md text-label-md text-primary flex-1">Sliding Tile Puzzle</span>
+  </header>
+
+  <div class="flex flex-col w-full px-margin-mobile gap-space-md pb-safe pb-space-lg" id="puzzle-picker-view">
+    <div class="flex flex-col items-center text-center gap-space-2xs mt-space-xs">
+      <div class="inline-flex items-center gap-space-xs px-space-md py-space-xs rounded-full bg-surface-container-high text-primary shadow-sm">
+        <span class="material-symbols-outlined text-[20px]" style="font-variation-settings:'FILL' 1;">touch_app</span>
+        <span class="font-label-md text-label-md">Tap a photo to solve the puzzle!</span>
+      </div>
+    </div>
+    <div class="grid grid-cols-3 gap-space-sm w-full" id="puzzle-thumb-grid"></div>
+  </div>
+
+  <div class="hidden flex-col w-full px-margin-mobile gap-space-md pb-safe pb-space-lg items-center" id="puzzle-board-view">
+    <div class="w-full max-w-[480px] flex items-center justify-between gap-space-sm">
+      <span class="font-headline-sm text-headline-sm text-on-surface" id="puzzle-move-counter">0 moves</span>
+      <button class="w-11 h-11 rounded-full bg-surface-container-high text-primary flex items-center justify-center shadow-[0_3px_0_#ccdbf3] active:translate-y-1 active:shadow-none" id="puzzle-preview-btn" type="button" aria-label="Hold to preview the full photo">
+        <span class="material-symbols-outlined text-[22px]">visibility</span>
+      </button>
+    </div>
+    <div class="relative w-full max-w-[480px] aspect-square rounded-xl overflow-hidden shadow-[0_12px_40px_rgba(0,102,138,0.15)] bg-surface-container-high" id="puzzle-board">
+      <div class="absolute inset-0 z-30 hidden items-center justify-center bg-black/70 rounded-xl" id="puzzle-preview-overlay">
+        <img alt="Full photo preview" class="w-full h-full object-cover rounded-xl" id="puzzle-preview-img" src=""/>
+      </div>
+    </div>
+    <div class="w-full max-w-[480px] flex gap-space-sm">
+      <button class="flex-1 min-h-touch-min rounded-xl bg-primary text-on-primary shadow-[0_8px_0_#004965] active:translate-y-1.5 active:shadow-[0_2px_0_#004965] flex items-center justify-center gap-space-xs transition-all font-label-md text-label-md" id="puzzle-shuffle-btn" type="button">
+        <span class="material-symbols-outlined text-[24px]">shuffle</span>Shuffle Again
+      </button>
+      <button aria-label="Choose a different photo" class="min-h-touch-min px-space-md rounded-xl bg-surface-container text-on-surface-variant shadow-[0_8px_0_#ccdbf3] active:translate-y-1.5 active:shadow-[0_2px_0_#ccdbf3] flex items-center justify-center transition-all" id="puzzle-change-photo-btn" type="button">
+        <span class="material-symbols-outlined text-[24px]">grid_view</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDING TILE PUZZLE WIN OVERLAY -->
+<div class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-margin-mobile" id="puzzle-win-overlay">
+  <div class="bg-surface-container-lowest rounded-xl p-space-lg w-full max-w-sm flex flex-col items-center gap-space-md text-center">
+    <span class="text-[64px]">🎉</span>
+    <h2 class="font-headline-sm text-headline-sm text-on-surface">You solved it!</h2>
+    <p class="font-body-sm text-body-sm text-on-surface-variant" id="puzzle-win-moves"></p>
+    <div class="flex gap-space-sm w-full">
+      <button class="flex-1 min-h-touch-min rounded-full bg-primary text-on-primary font-label-md text-label-md" id="puzzle-win-again-btn" type="button">Play Again</button>
+      <button class="flex-1 min-h-touch-min rounded-full bg-surface-container text-on-surface-variant font-label-md text-label-md" id="puzzle-win-picker-btn" type="button">Choose Photo</button>
+    </div>
+  </div>
+</div>
 
 <!-- ADMIN MODAL (shared): manage Animal Zoo sounds + Peekaboo photos -->
 <div class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-margin-mobile" id="admin-modal">

@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const CACHE_NAME = `kdema-playtime-${CACHE_VERSION}`;
 
 const APP_SHELL = [
@@ -10,7 +10,8 @@ const APP_SHELL = [
   './app.js',
   './manifest.json',
   './icons/icon-192.png',
-  './icons/icon-512.png'
+  './icons/icon-512.png',
+  ...Array.from({ length: 18 }, (_, i) => `./puzzle-images/${i + 1}.jpg`)
 ];
 
 self.addEventListener('install', (event) => {

@@ -12,6 +12,7 @@
      npx babel app.src.js --config-file ./babel.config.json -o app.js
    Then re-add this header comment (Babel strips comments) and re-test. */
 
+
 /* ===================== OFFLINE / INSTALL SUPPORT ===================== */
 function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
@@ -56,6 +57,7 @@ document.querySelectorAll('.game-card').forEach(function (card) {
     if (game === 'zoo') Zoo.start();
     if (game === 'paint') Paint.start();
     if (game === 'peekaboo') Peekaboo.start();
+    if (game === 'slidepuzzle') SlidePuzzle.start();
   });
 });
 
@@ -1802,6 +1804,221 @@ var Peekaboo = function () {
     }
     render();
     loadCustomImages().then(render);
+  }
+  return {
+    start
+  };
+}();
+
+/* ===================== SLIDING TILE PUZZLE ===================== */
+var SlidePuzzle = function () {
+  var IMAGE_COUNT = 18;
+  var GRID_SIZE = 3;
+  var CELL_COUNT = GRID_SIZE * GRID_SIZE;
+  var BLANK = CELL_COUNT - 1;
+  var SHUFFLE_MOVES = 120;
+  var backBtn = document.getElementById('puzzle-back-btn');
+  var pickerView = document.getElementById('puzzle-picker-view');
+  var boardView = document.getElementById('puzzle-board-view');
+  var thumbGrid = document.getElementById('puzzle-thumb-grid');
+  var boardEl = document.getElementById('puzzle-board');
+  var moveCounterEl = document.getElementById('puzzle-move-counter');
+  var previewBtn = document.getElementById('puzzle-preview-btn');
+  var previewOverlay = document.getElementById('puzzle-preview-overlay');
+  var previewImg = document.getElementById('puzzle-preview-img');
+  var shuffleBtn = document.getElementById('puzzle-shuffle-btn');
+  var changePhotoBtn = document.getElementById('puzzle-change-photo-btn');
+  var winOverlay = document.getElementById('puzzle-win-overlay');
+  var winMovesEl = document.getElementById('puzzle-win-moves');
+  var winAgainBtn = document.getElementById('puzzle-win-again-btn');
+  var winPickerBtn = document.getElementById('puzzle-win-picker-btn');
+  var built = false;
+  var currentImage = 1;
+  var board = [];
+  var blankPos = BLANK;
+  var moveCount = 0;
+  var solved = false;
+  var tileEls = {};
+  function imgUrl(i) {
+    return `puzzle-images/${i}.jpg`;
+  }
+  function buildThumbGrid() {
+    thumbGrid.innerHTML = '';
+    var _loop2 = function _loop2(i) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'aspect-square rounded-xl overflow-hidden shadow-[0_6px_0_#ccdbf3] active:translate-y-1 active:shadow-none transition-all';
+      btn.innerHTML = `<img src="${imgUrl(i)}" class="w-full h-full object-cover" alt="Puzzle photo ${i}">`;
+      btn.addEventListener('click', function () {
+        return openPuzzle(i);
+      });
+      thumbGrid.appendChild(btn);
+    };
+    for (var i = 1; i <= IMAGE_COUNT; i++) {
+      _loop2(i);
+    }
+  }
+  function showPicker() {
+    pickerView.classList.remove('hidden');
+    pickerView.classList.add('flex');
+    boardView.classList.remove('flex');
+    boardView.classList.add('hidden');
+    winOverlay.style.display = 'none';
+  }
+  function showBoard() {
+    pickerView.classList.add('hidden');
+    pickerView.classList.remove('flex');
+    boardView.classList.remove('hidden');
+    boardView.classList.add('flex');
+  }
+  function solvedBoard() {
+    return Array.from({
+      length: CELL_COUNT
+    }, function (_, i) {
+      return i;
+    });
+  }
+  function isAdjacent(posA, posB) {
+    var rowA = Math.floor(posA / GRID_SIZE),
+      colA = posA % GRID_SIZE;
+    var rowB = Math.floor(posB / GRID_SIZE),
+      colB = posB % GRID_SIZE;
+    return Math.abs(rowA - rowB) + Math.abs(colA - colB) === 1;
+  }
+  function neighborsOf(pos) {
+    var row = Math.floor(pos / GRID_SIZE),
+      col = pos % GRID_SIZE;
+    var out = [];
+    if (row > 0) out.push(pos - GRID_SIZE);
+    if (row < GRID_SIZE - 1) out.push(pos + GRID_SIZE);
+    if (col > 0) out.push(pos - 1);
+    if (col < GRID_SIZE - 1) out.push(pos + 1);
+    return out;
+  }
+  function shuffle() {
+    board = solvedBoard();
+    blankPos = BLANK;
+    var lastPos = -1;
+    for (var i = 0; i < SHUFFLE_MOVES; i++) {
+      var options = neighborsOf(blankPos).filter(function (p) {
+        return p !== lastPos;
+      });
+      var swapPos = options[Math.floor(Math.random() * options.length)];
+      board[blankPos] = board[swapPos];
+      board[swapPos] = BLANK;
+      lastPos = blankPos;
+      blankPos = swapPos;
+    }
+    moveCount = 0;
+    solved = false;
+  }
+  function buildTileEls() {
+    boardEl.querySelectorAll('.puzzle-tile').forEach(function (el) {
+      return el.remove();
+    });
+    var _loop3 = function _loop3(tileId) {
+      var homeRow = Math.floor(tileId / GRID_SIZE),
+        homeCol = tileId % GRID_SIZE;
+      var el = document.createElement('div');
+      el.className = 'puzzle-tile';
+      el.style.width = `${1 / GRID_SIZE * 100}%`;
+      el.style.height = `${1 / GRID_SIZE * 100}%`;
+      el.style.backgroundImage = `url(${imgUrl(currentImage)})`;
+      el.style.backgroundSize = `${GRID_SIZE * 100}% ${GRID_SIZE * 100}%`;
+      el.style.backgroundPosition = `${homeCol / (GRID_SIZE - 1) * 100}% ${homeRow / (GRID_SIZE - 1) * 100}%`;
+      el.addEventListener('click', function () {
+        return tryMove(tileId);
+      });
+      boardEl.insertBefore(el, previewOverlay);
+      tileEls[tileId] = el;
+    };
+    for (var tileId = 0; tileId < BLANK; tileId++) {
+      _loop3(tileId);
+    }
+  }
+  function positionTiles() {
+    for (var pos = 0; pos < CELL_COUNT; pos++) {
+      var tileId = board[pos];
+      if (tileId === BLANK) continue;
+      var row = Math.floor(pos / GRID_SIZE),
+        col = pos % GRID_SIZE;
+      var el = tileEls[tileId];
+      el.style.left = `${col / GRID_SIZE * 100}%`;
+      el.style.top = `${row / GRID_SIZE * 100}%`;
+    }
+  }
+  function tryMove(tileId) {
+    if (solved) return;
+    var pos = board.indexOf(tileId);
+    if (!isAdjacent(pos, blankPos)) return;
+    board[blankPos] = tileId;
+    board[pos] = BLANK;
+    blankPos = pos;
+    moveCount++;
+    moveCounterEl.textContent = moveCount === 1 ? '1 move' : `${moveCount} moves`;
+    positionTiles();
+    AudioFX.chime(600 + Math.random() * 150);
+    checkWin();
+  }
+  function checkWin() {
+    var win = solvedBoard().every(function (v, i) {
+      return board[i] === v;
+    });
+    if (!win) return;
+    solved = true;
+    setTimeout(function () {
+      AudioFX.giggle();
+      winMovesEl.textContent = moveCount === 1 ? 'Solved in 1 move!' : `Solved in ${moveCount} moves!`;
+      winOverlay.style.display = 'flex';
+    }, 200);
+  }
+  function openPuzzle(imgIndex) {
+    currentImage = imgIndex;
+    previewImg.src = imgUrl(imgIndex);
+    showBoard();
+    shuffle();
+    moveCounterEl.textContent = '0 moves';
+    buildTileEls();
+    positionTiles();
+  }
+  backBtn.addEventListener('click', function () {
+    if (!boardView.classList.contains('hidden')) {
+      showPicker();
+    } else {
+      goHome();
+    }
+  });
+  shuffleBtn.addEventListener('click', function () {
+    winOverlay.style.display = 'none';
+    shuffle();
+    moveCounterEl.textContent = '0 moves';
+    positionTiles();
+    AudioFX.chime(500);
+  });
+  changePhotoBtn.addEventListener('click', showPicker);
+  winAgainBtn.addEventListener('click', function () {
+    return shuffleBtn.click();
+  });
+  winPickerBtn.addEventListener('click', function () {
+    winOverlay.style.display = 'none';
+    showPicker();
+  });
+  function showPreview() {
+    previewOverlay.style.display = 'flex';
+  }
+  function hidePreview() {
+    previewOverlay.style.display = 'none';
+  }
+  previewBtn.addEventListener('pointerdown', showPreview);
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (ev) {
+    return previewBtn.addEventListener(ev, hidePreview);
+  });
+  function start() {
+    if (!built) {
+      buildThumbGrid();
+      built = true;
+    }
+    showPicker();
   }
   return {
     start

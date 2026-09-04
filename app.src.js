@@ -32,6 +32,7 @@ document.querySelectorAll('.game-card').forEach(card => {
     if (game === 'zoo') Zoo.start();
     if (game === 'paint') Paint.start();
     if (game === 'peekaboo') Peekaboo.start();
+    if (game === 'slidepuzzle') SlidePuzzle.start();
   });
 });
 
@@ -1466,6 +1467,202 @@ const Peekaboo = (() => {
     }
     render();
     loadCustomImages().then(render);
+  }
+
+  return { start };
+})();
+
+/* ===================== SLIDING TILE PUZZLE ===================== */
+const SlidePuzzle = (() => {
+  const IMAGE_COUNT = 18;
+  const GRID_SIZE = 3;
+  const CELL_COUNT = GRID_SIZE * GRID_SIZE;
+  const BLANK = CELL_COUNT - 1;
+  const SHUFFLE_MOVES = 120;
+
+  const backBtn = document.getElementById('puzzle-back-btn');
+  const pickerView = document.getElementById('puzzle-picker-view');
+  const boardView = document.getElementById('puzzle-board-view');
+  const thumbGrid = document.getElementById('puzzle-thumb-grid');
+  const boardEl = document.getElementById('puzzle-board');
+  const moveCounterEl = document.getElementById('puzzle-move-counter');
+  const previewBtn = document.getElementById('puzzle-preview-btn');
+  const previewOverlay = document.getElementById('puzzle-preview-overlay');
+  const previewImg = document.getElementById('puzzle-preview-img');
+  const shuffleBtn = document.getElementById('puzzle-shuffle-btn');
+  const changePhotoBtn = document.getElementById('puzzle-change-photo-btn');
+  const winOverlay = document.getElementById('puzzle-win-overlay');
+  const winMovesEl = document.getElementById('puzzle-win-moves');
+  const winAgainBtn = document.getElementById('puzzle-win-again-btn');
+  const winPickerBtn = document.getElementById('puzzle-win-picker-btn');
+
+  let built = false;
+  let currentImage = 1;
+  let board = [];
+  let blankPos = BLANK;
+  let moveCount = 0;
+  let solved = false;
+  const tileEls = {};
+
+  function imgUrl(i) { return `puzzle-images/${i}.jpg`; }
+
+  function buildThumbGrid() {
+    thumbGrid.innerHTML = '';
+    for (let i = 1; i <= IMAGE_COUNT; i++) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'aspect-square rounded-xl overflow-hidden shadow-[0_6px_0_#ccdbf3] active:translate-y-1 active:shadow-none transition-all';
+      btn.innerHTML = `<img src="${imgUrl(i)}" class="w-full h-full object-cover" alt="Puzzle photo ${i}">`;
+      btn.addEventListener('click', () => openPuzzle(i));
+      thumbGrid.appendChild(btn);
+    }
+  }
+
+  function showPicker() {
+    pickerView.classList.remove('hidden');
+    pickerView.classList.add('flex');
+    boardView.classList.remove('flex');
+    boardView.classList.add('hidden');
+    winOverlay.style.display = 'none';
+  }
+
+  function showBoard() {
+    pickerView.classList.add('hidden');
+    pickerView.classList.remove('flex');
+    boardView.classList.remove('hidden');
+    boardView.classList.add('flex');
+  }
+
+  function solvedBoard() {
+    return Array.from({ length: CELL_COUNT }, (_, i) => i);
+  }
+
+  function isAdjacent(posA, posB) {
+    const rowA = Math.floor(posA / GRID_SIZE), colA = posA % GRID_SIZE;
+    const rowB = Math.floor(posB / GRID_SIZE), colB = posB % GRID_SIZE;
+    return Math.abs(rowA - rowB) + Math.abs(colA - colB) === 1;
+  }
+
+  function neighborsOf(pos) {
+    const row = Math.floor(pos / GRID_SIZE), col = pos % GRID_SIZE;
+    const out = [];
+    if (row > 0) out.push(pos - GRID_SIZE);
+    if (row < GRID_SIZE - 1) out.push(pos + GRID_SIZE);
+    if (col > 0) out.push(pos - 1);
+    if (col < GRID_SIZE - 1) out.push(pos + 1);
+    return out;
+  }
+
+  function shuffle() {
+    board = solvedBoard();
+    blankPos = BLANK;
+    let lastPos = -1;
+    for (let i = 0; i < SHUFFLE_MOVES; i++) {
+      const options = neighborsOf(blankPos).filter(p => p !== lastPos);
+      const swapPos = options[Math.floor(Math.random() * options.length)];
+      board[blankPos] = board[swapPos];
+      board[swapPos] = BLANK;
+      lastPos = blankPos;
+      blankPos = swapPos;
+    }
+    moveCount = 0;
+    solved = false;
+  }
+
+  function buildTileEls() {
+    boardEl.querySelectorAll('.puzzle-tile').forEach(el => el.remove());
+    for (let tileId = 0; tileId < BLANK; tileId++) {
+      const homeRow = Math.floor(tileId / GRID_SIZE), homeCol = tileId % GRID_SIZE;
+      const el = document.createElement('div');
+      el.className = 'puzzle-tile';
+      el.style.width = `${(1 / GRID_SIZE) * 100}%`;
+      el.style.height = `${(1 / GRID_SIZE) * 100}%`;
+      el.style.backgroundImage = `url(${imgUrl(currentImage)})`;
+      el.style.backgroundSize = `${GRID_SIZE * 100}% ${GRID_SIZE * 100}%`;
+      el.style.backgroundPosition = `${(homeCol / (GRID_SIZE - 1)) * 100}% ${(homeRow / (GRID_SIZE - 1)) * 100}%`;
+      el.addEventListener('click', () => tryMove(tileId));
+      boardEl.insertBefore(el, previewOverlay);
+      tileEls[tileId] = el;
+    }
+  }
+
+  function positionTiles() {
+    for (let pos = 0; pos < CELL_COUNT; pos++) {
+      const tileId = board[pos];
+      if (tileId === BLANK) continue;
+      const row = Math.floor(pos / GRID_SIZE), col = pos % GRID_SIZE;
+      const el = tileEls[tileId];
+      el.style.left = `${(col / GRID_SIZE) * 100}%`;
+      el.style.top = `${(row / GRID_SIZE) * 100}%`;
+    }
+  }
+
+  function tryMove(tileId) {
+    if (solved) return;
+    const pos = board.indexOf(tileId);
+    if (!isAdjacent(pos, blankPos)) return;
+    board[blankPos] = tileId;
+    board[pos] = BLANK;
+    blankPos = pos;
+    moveCount++;
+    moveCounterEl.textContent = moveCount === 1 ? '1 move' : `${moveCount} moves`;
+    positionTiles();
+    AudioFX.chime(600 + Math.random() * 150);
+    checkWin();
+  }
+
+  function checkWin() {
+    const win = solvedBoard().every((v, i) => board[i] === v);
+    if (!win) return;
+    solved = true;
+    setTimeout(() => {
+      AudioFX.giggle();
+      winMovesEl.textContent = moveCount === 1 ? 'Solved in 1 move!' : `Solved in ${moveCount} moves!`;
+      winOverlay.style.display = 'flex';
+    }, 200);
+  }
+
+  function openPuzzle(imgIndex) {
+    currentImage = imgIndex;
+    previewImg.src = imgUrl(imgIndex);
+    showBoard();
+    shuffle();
+    moveCounterEl.textContent = '0 moves';
+    buildTileEls();
+    positionTiles();
+  }
+
+  backBtn.addEventListener('click', () => {
+    if (!boardView.classList.contains('hidden')) {
+      showPicker();
+    } else {
+      goHome();
+    }
+  });
+
+  shuffleBtn.addEventListener('click', () => {
+    winOverlay.style.display = 'none';
+    shuffle();
+    moveCounterEl.textContent = '0 moves';
+    positionTiles();
+    AudioFX.chime(500);
+  });
+
+  changePhotoBtn.addEventListener('click', showPicker);
+  winAgainBtn.addEventListener('click', () => shuffleBtn.click());
+  winPickerBtn.addEventListener('click', () => { winOverlay.style.display = 'none'; showPicker(); });
+
+  function showPreview() { previewOverlay.style.display = 'flex'; }
+  function hidePreview() { previewOverlay.style.display = 'none'; }
+  previewBtn.addEventListener('pointerdown', showPreview);
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => previewBtn.addEventListener(ev, hidePreview));
+
+  function start() {
+    if (!built) {
+      buildThumbGrid();
+      built = true;
+    }
+    showPicker();
   }
 
   return { start };

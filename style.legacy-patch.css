@@ -18,14 +18,23 @@
     width: calc(50% - 0.5rem);
     box-sizing: border-box;
   }
+  .grid-cols-3 > * {
+    width: calc(33.333% - 0.5rem);
+    box-sizing: border-box;
+  }
 }
 
 /* aspect-ratio fallback: without it these elements would collapse to 0
    height. min-height (rather than the padding-percent trick) is used
-   because their children already rely on percentage height/width. */
+   because their children already rely on percentage height/width. The
+   puzzle thumbnail grid is 3 columns (much narrower tiles) so it gets its
+   own, smaller fallback height instead of the shared .aspect-square value. */
 @supports not (aspect-ratio: 1 / 1) {
   .aspect-square {
     min-height: 300px;
+  }
+  #puzzle-thumb-grid .aspect-square {
+    min-height: 120px;
   }
   .aspect-\[4\/5\] {
     min-height: 400px;
