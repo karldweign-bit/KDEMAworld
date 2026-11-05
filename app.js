@@ -249,7 +249,7 @@ var Nav = function () {
   var brand = document.createElement('button');
   brand.type = 'button';
   brand.className = 'pg-brand';
-  brand.innerHTML = '<span class="pg-brand-logo">🎈</span><span class="pg-brand-name">Baby Touch Playground</span>';
+  brand.innerHTML = '<img class="pg-brand-logo" src="ref-images/logo.png" alt=""><span class="pg-brand-name">Baby Touch Playground</span>';
   brand.addEventListener('click', goHome);
   bar.appendChild(brand);
   var tabs = document.createElement('div');
@@ -659,6 +659,7 @@ var Zoo = function () {
 
   var animals = [{
     id: 'cow',
+    img: 'ref-images/cow.jpg',
     label: 'Cow',
     word: 'MOOO!',
     freq: 220,
@@ -667,6 +668,7 @@ var Zoo = function () {
     svg: `<circle cx="50" cy="54" fill="#ffffff" r="34"/><ellipse cx="40" cy="44" fill="#0d1c2e" rx="9" ry="12"/><ellipse cx="68" cy="50" fill="#0d1c2e" rx="7" ry="9"/><ellipse cx="28" cy="24" fill="#0d1c2e" rx="10" ry="6" transform="rotate(-30 28 24)"/><ellipse cx="72" cy="24" fill="#0d1c2e" rx="10" ry="6" transform="rotate(30 72 24)"/><ellipse cx="50" cy="64" fill="#ffafd3" rx="20" ry="14"/><circle cx="43" cy="62" fill="#811057" r="3"/><circle cx="57" cy="62" fill="#811057" r="3"/><circle cx="39" cy="44" fill="#00668a" r="3.5"/><circle cx="61" cy="44" fill="#00668a" r="3.5"/><circle cx="41" cy="42" fill="#ffffff" r="1.5"/><circle cx="63" cy="42" fill="#ffffff" r="1.5"/><path d="M44 70 C47 74 53 74 56 70" stroke="#811057" stroke-linecap="round" stroke-width="2"/>`
   }, {
     id: 'lion',
+    img: 'ref-images/lion.jpg',
     label: 'Lion',
     word: 'ROAAR!',
     freq: 130,
@@ -675,6 +677,7 @@ var Zoo = function () {
     svg: `<circle cx="50" cy="50" fill="#ffb783" r="38"/><circle cx="50" cy="50" fill="#944a00" r="34" stroke="#ffdcc5" stroke-dasharray="8 6" stroke-width="3"/><circle cx="50" cy="52" fill="#ffdcc5" r="24"/><circle cx="30" cy="30" fill="#ffdcc5" r="7"/><circle cx="70" cy="30" fill="#ffdcc5" r="7"/><circle cx="41" cy="48" fill="#301400" r="3"/><circle cx="59" cy="48" fill="#301400" r="3"/><polygon fill="#944a00" points="50,56 46,52 54,52"/><path d="M46 58 Q50 63 54 58" stroke="#301400" stroke-linecap="round" stroke-width="2"/>`
   }, {
     id: 'duck',
+    img: 'ref-images/duck.jpg',
     label: 'Duck',
     word: 'QUACK!',
     freq: 392,
@@ -683,6 +686,7 @@ var Zoo = function () {
     svg: `<circle cx="46" cy="54" fill="#ffdcc5" r="28"/><circle cx="56" cy="40" fill="#ffdcc5" r="18"/><circle cx="58" cy="36" fill="#0d1c2e" r="3"/><ellipse cx="74" cy="42" fill="#fd933d" rx="10" ry="5"/><path d="M30 52 C30 62 42 66 50 66 C42 66 36 60 30 52 Z" fill="#ffb783"/>`
   }, {
     id: 'frog',
+    img: 'ref-images/frog.jpg',
     label: 'Frog',
     word: 'RIBBIT!',
     freq: 330,
@@ -691,6 +695,7 @@ var Zoo = function () {
     svg: `<circle cx="34" cy="36" fill="#7bd0ff" r="11"/><circle cx="66" cy="36" fill="#7bd0ff" r="11"/><circle cx="34" cy="35" fill="#ffffff" r="5"/><circle cx="66" cy="35" fill="#ffffff" r="5"/><circle cx="35" cy="35" fill="#004965" r="2.5"/><circle cx="67" cy="35" fill="#004965" r="2.5"/><ellipse cx="50" cy="56" fill="#7bd0ff" rx="30" ry="22"/><ellipse cx="50" cy="62" fill="#c4e7ff" rx="18" ry="12"/><path d="M38 56 Q50 66 62 56" stroke="#004965" stroke-linecap="round" stroke-width="2.5"/>`
   }, {
     id: 'puppy',
+    img: 'ref-images/puppy.jpg',
     label: 'Puppy',
     word: 'WOOF!',
     freq: 260,
@@ -699,12 +704,31 @@ var Zoo = function () {
     svg: `<ellipse cx="28" cy="46" fill="#944a00" rx="8" ry="16" transform="rotate(-15 28 46)"/><ellipse cx="72" cy="46" fill="#944a00" rx="8" ry="16" transform="rotate(15 72 46)"/><circle cx="50" cy="52" fill="#ffffff" r="28"/><circle cx="41" cy="46" fill="#301400" r="3.5"/><circle cx="59" cy="46" fill="#301400" r="3.5"/><ellipse cx="50" cy="54" fill="#301400" rx="5" ry="3.5"/><path d="M46 58 Q50 63 54 58" stroke="#301400" stroke-linecap="round" stroke-width="2"/>`
   }, {
     id: 'kitty',
+    img: 'ref-images/kitten.jpg',
     label: 'Kitty',
     word: 'MEOW!',
     freq: 523,
     cardClass: 'bg-tertiary-fixed text-on-tertiary-fixed',
     shadow: '#ffafd3',
     svg: `<polygon fill="#ffafd3" points="26,38 34,20 46,32"/><polygon fill="#ffafd3" points="74,38 66,20 54,32"/><circle cx="50" cy="54" fill="#ffafd3" r="28"/><circle cx="40" cy="50" fill="#3d0026" r="3"/><circle cx="60" cy="50" fill="#3d0026" r="3"/><polygon fill="#811057" points="50,56 47,53 53,53"/><path d="M47 58 Q50 61 53 58" stroke="#3d0026" stroke-linecap="round" stroke-width="1.5"/>`
+  }, {
+    id: 'elephant',
+    img: 'ref-images/elephant.jpg',
+    label: 'Elephant',
+    word: 'TRUMPET!',
+    freq: 180,
+    cardClass: 'bg-primary text-on-primary',
+    shadow: '#004965',
+    svg: ''
+  }, {
+    id: 'lamb',
+    img: 'ref-images/lamb.jpg',
+    label: 'Lamb',
+    word: 'BAAA!',
+    freq: 300,
+    cardClass: 'bg-tertiary text-on-tertiary',
+    shadow: '#811057',
+    svg: ''
   }];
   function playAnimalSound(a) {
     var custom = customAudio[a.id];
@@ -749,8 +773,8 @@ var Zoo = function () {
       btn.type = 'button';
       btn.className = `group relative flex flex-col items-center justify-between p-space-sm rounded-xl ${a.cardClass} shadow-[0_8px_0_${a.shadow}] active:translate-y-1.5 active:shadow-[0_2px_0_${a.shadow}] transition-all min-h-[190px] overflow-hidden`;
       btn.innerHTML = `
-        <div class="relative w-24 h-24 my-auto flex items-center justify-center transition-transform group-active:scale-110">
-          <svg class="w-24 h-24 drop-shadow-md" fill="none" viewBox="0 0 100 100">${a.svg}</svg>
+        <div class="pg-animal-photo my-auto transition-transform group-active:scale-110">
+          <img src="${a.img}" alt="${a.label}" draggable="false">
         </div>
         <div class="w-full text-center">
           <span class="inline-block px-space-sm py-0.5 rounded-full bg-surface-container-lowest text-on-surface font-label-md text-label-md tracking-wider shadow-sm">${a.word}</span>
@@ -1766,12 +1790,14 @@ var Peekaboo = function () {
   var built = false;
   var housings = [{
     id: 'tent',
+    img: 'ref-images/circus.jpg',
     icon: 'festival',
     bg: 'bg-tertiary-container text-on-tertiary-container',
     shadow: '#811057',
     label: 'Circus Tent'
   }, {
     id: 'gift',
+    img: 'ref-images/gift.jpg',
     icon: 'redeem',
     bg: 'bg-secondary-container text-on-secondary-container',
     shadow: '#693300',
@@ -1801,7 +1827,7 @@ var Peekaboo = function () {
     shadow: '#ffafd3',
     label: 'Curtain'
   }];
-  var faces = ['🐻', '🐰', '🐧', '🦉', '🦊', '🐘', '🐼', '🦁'];
+  var faces = ['img:ref-images/bear.jpg', '🐰', '🐧', '🦉', '🦊', '🐘', '🐼', '🦁'];
   var customImages = {}; // housing id -> { kind: 'blob'|'url', url, blob? }
 
   function pickFaces() {
@@ -1818,7 +1844,11 @@ var Peekaboo = function () {
     if (custom) {
       return `<img src="${custom.url}" alt="${h.label} surprise" class="w-full h-full object-cover rounded-xl" referrerpolicy="no-referrer">`;
     }
-    return assignedFaces[i];
+    var face = assignedFaces[i];
+    if (face.indexOf('img:') === 0) {
+      return `<img src="${face.slice(4)}" alt="Surprise friend" class="w-full h-full object-cover rounded-xl" draggable="false">`;
+    }
+    return face;
   }
   function render() {
     grid.innerHTML = '';
@@ -1828,8 +1858,8 @@ var Peekaboo = function () {
       tile.innerHTML = `
         <div class="peek-inner">
           <div class="peek-face peek-front rounded-xl ${h.bg} shadow-[0_8px_0_${h.shadow}] flex flex-col items-center justify-center gap-space-2xs">
-            <span class="material-symbols-outlined text-[48px]">${h.icon}</span>
-            <span class="font-label-sm text-label-sm text-center px-1">${h.label}</span>
+            ${h.img ? `<img class="pg-spot-photo" src="${h.img}" alt="" draggable="false">` : `<span class="material-symbols-outlined text-[48px]">${h.icon}</span>`}
+            <span class="font-label-sm text-label-sm text-center px-1 ${h.img ? 'pg-spot-label' : ''}">${h.label}</span>
           </div>
           <div class="peek-face peek-back rounded-xl bg-surface-container-lowest shadow-[0_8px_0_#d5e3fc] flex items-center justify-center text-[56px] overflow-hidden">
             ${backFaceHTML(h, i)}

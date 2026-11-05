@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = 'v5';
 const CACHE_NAME = `kdema-playtime-${CACHE_VERSION}`;
 
 const APP_SHELL = [
@@ -12,6 +12,8 @@ const APP_SHELL = [
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png',
+  ...['cow','lion','duck','frog','puppy','kitten','elephant','lamb','bear','circus','gift'].map((n) => `./ref-images/${n}.jpg`),
+  './ref-images/logo.png',
   ...Array.from({ length: 18 }, (_, i) => `./puzzle-images/${i + 1}.jpg`)
 ];
 
