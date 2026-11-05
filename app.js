@@ -12,15 +12,13 @@
      npx babel app.src.js --config-file ./babel.config.json -o app.js
    Then re-add this header comment (Babel strips comments) and re-test. */
 
-
 /* ===================== OFFLINE / INSTALL SUPPORT ===================== */
-function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
+function _slicedToArray(e, i) { return _iterableToArrayLimit(e, i) || _unsupportedIterableToArray(e, i) || _nonIterableRest(); }
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _unsupportedIterableToArray(t, e) { if (t) { if ("string" == typeof t) return _arrayLikeToArray(t, e); var o = {}.toString.call(t).slice(8, -1); return "Object" === o && t.constructor && (o = t.constructor.name), "Map" === o || "Set" === o ? Array.from(t) : "Arguments" === o || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(o) ? _arrayLikeToArray(t, e) : void 0; } }
 function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
-function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
-function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
-function _regenerator() { /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */ var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i.return) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
+function _iterableToArrayLimit(r, t) { var e = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (Array.isArray(r) && (null == e || e === ("undefined" != typeof Symbol && [][Symbol.iterator]) || e === []["@@iterator"])) return r; if (null != e) { var l, n, i, a, u = [], o = !0, f = !1; try { if (i = (e = e.call(r)).next, 0 === t) { if (Object(e) !== e) return; o = !1; } else for (; !(o = (l = i.call(e)).done) && (u.push(l.value), u.length !== t); o = !0); } catch (r) { f = !0, n = r; } finally { try { if (!o && null != e.return && (a = e.return(), Object(a) !== a)) return; } finally { if (f) throw n; } } return u; } }
+function _regenerator() { /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */ var r, e, o = "function" == typeof Symbol ? Symbol : {}, n = o.iterator || "@@iterator", a = o.toStringTag || "@@toStringTag"; function i(o, n, a, i) { var u = n && n.prototype instanceof Generator ? n : Generator, f = Object.create(u.prototype); return _regeneratorDefine2(f, "_invoke", function (t, o, n) { var a, i, u, f = 0, p = n || [], y = !1, G = { p: 0, n: 0, v: r, a: l, f: l.bind(r, 4), d: function d(t, e) { return a = t, i = 0, u = r, G.n = e, c; } }; function l(t, o) { for (i = t, u = o, e = 0; !y && f && !n && e < p.length; e++) { var n, a = p[e], l = G.p, F = a[2]; t > 3 ? (n = F === o) && (u = a[(i = a[4]) ? 5 : (i = 3, 3)], a[4] = a[5] = r) : a[0] <= l && ((n = t < 2 && l < a[1]) ? (i = 0, G.v = o, G.n = a[1]) : l < F && (n = t < 3 || a[0] > o || o > F) && (a[4] = t, a[5] = o, G.n = F, i = 0)); } if (n || t > 1) return c; throw y = !0, o; } return function (n, p, F) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && l(p, F), i = p, u = F; (e = i < 2 ? r : u) || !y;) { a || (i ? i < 3 ? (i > 1 && (G.n = -1), l(i, u)) : G.n = u : G.v = u); try { if (f = 2, a) { if (i || (n = "next"), e = a[n]) { if (!(e = e.call(a, u))) throw TypeError("iterator result is not an object"); if (!e.done) return e; u = e.value, i < 2 && (i = 0); } else 1 === i && (e = a.return) && e.call(a), i < 2 && (u = TypeError("The iterator does not provide a '" + n + "' method"), i = 1); a = r; } else if ((e = (y = G.n < 0) ? u : t.call(o, G)) !== c) break; } catch (t) { a = r, i = 1, u = t; } finally { f = 1; } } return { value: e, done: y }; }; }(o, a, i), !0), f; } var c = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} e = Object.getPrototypeOf; var u = [][n] ? e(e([][n]())) : (_regeneratorDefine2(e = {}, n, function () { return this; }), e), f = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(u); function p(r) { return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(r, a, "GeneratorFunction")), r.prototype = Object.create(f), r; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(f, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, a, "GeneratorFunction"), _regeneratorDefine2(f), _regeneratorDefine2(f, a, "Generator"), _regeneratorDefine2(f, n, function () { return this; }), _regeneratorDefine2(f, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: p }; })(); }
 function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); } r ? i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n : (o("next", 0), o("throw", 1), o("return", 2)); }, _regeneratorDefine2(e, r, n, t); }
 function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
 function _asyncToGenerator(n) { return function () { var t = this, e = arguments; return new Promise(function (r, o) { var a = n.apply(t, e); function _next(n) { asyncGeneratorStep(a, r, o, _next, _throw, "next", n); } function _throw(n) { asyncGeneratorStep(a, r, o, _next, _throw, "throw", n); } _next(void 0); }); }; }
@@ -32,9 +30,90 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+/* ===================== SENSORY WAVEFIELD (live sound-wave bars) ===================== */
+var Wave = function () {
+  var COLORS = ['#38bdf8', '#fd933d', '#ff8cc5', '#00668a', '#ffb783', '#7bd0ff', '#fd933d', '#ff8cc5', '#38bdf8', '#a43073', '#ffb783', '#38bdf8'];
+  var fields = [];
+  var levels = [];
+  var raf = 0;
+  function build(container, label) {
+    var field = document.createElement('div');
+    field.className = 'pg-wave';
+    var bars = document.createElement('div');
+    bars.className = 'pg-wave-bars';
+    var barEls = [];
+    COLORS.forEach(function (c) {
+      var b = document.createElement('span');
+      b.className = 'pg-wave-bar';
+      b.style.background = c;
+      bars.appendChild(b);
+      barEls.push(b);
+    });
+    var cap = document.createElement('div');
+    cap.className = 'pg-wave-label';
+    cap.innerHTML = '<span class="material-symbols-outlined">graphic_eq</span><span>' + label + '</span>';
+    field.appendChild(bars);
+    field.appendChild(cap);
+    container.appendChild(field);
+    fields.push(barEls);
+    if (!levels.length) levels = COLORS.map(function () {
+      return 0.22;
+    });
+  }
+  function tick() {
+    var alive = false;
+    for (var i = 0; i < levels.length; i++) {
+      levels[i] = Math.max(0.22, levels[i] * 0.9);
+      if (levels[i] > 0.23) alive = true;
+    }
+    fields.forEach(function (barEls) {
+      return barEls.forEach(function (el, i) {
+        el.style.height = Math.round(levels[i] * 100) + '%';
+      });
+    });
+    raf = alive ? requestAnimationFrame(tick) : 0;
+  }
+
+  // freq (Hz) lifts the bars around its pitch position; each bar gets a little jitter so it feels alive
+  function pulse(freq) {
+    if (!levels.length) return;
+    var centre = Math.max(0, Math.min(1, ((freq || 600) - 250) / 1100)) * (levels.length - 1);
+    for (var i = 0; i < levels.length; i++) {
+      var near = 1 - Math.min(1, Math.abs(i - centre) / 5);
+      levels[i] = Math.min(1, Math.max(levels[i], 0.25 + near * 0.6 * (0.75 + Math.random() * 0.25)));
+    }
+    if (!raf) raf = requestAnimationFrame(tick);
+  }
+  return {
+    build,
+    pulse
+  };
+}();
+
 /* ===================== VIEW SWITCHING ===================== */
 var screens = document.querySelectorAll('.screen');
 var activeGame = null;
+var GAMES = [{
+  id: 'pop',
+  label: 'Bubbles',
+  icon: 'bubble_chart'
+}, {
+  id: 'zoo',
+  label: 'Animals',
+  icon: 'pets'
+}, {
+  id: 'paint',
+  label: 'Paint',
+  icon: 'auto_awesome'
+}, {
+  id: 'peekaboo',
+  label: 'Peekaboo',
+  icon: 'visibility'
+}, {
+  id: 'slidepuzzle',
+  label: 'Puzzle',
+  icon: 'extension'
+}];
 function showScreen(id) {
   screens.forEach(function (s) {
     return s.classList.toggle('active', s.id === id);
@@ -44,47 +123,101 @@ function goHome() {
   if (activeGame === 'paint') Paint.stop();
   activeGame = null;
   showScreen('home');
+  Nav.sync();
+}
+function openGame(game) {
+  if (activeGame === 'paint' && game !== 'paint') Paint.stop();
+  activeGame = game;
+  showScreen('game-' + game);
+  if (game === 'pop') Pop.start();
+  if (game === 'zoo') Zoo.start();
+  if (game === 'paint') Paint.start();
+  if (game === 'peekaboo') Peekaboo.start();
+  if (game === 'slidepuzzle') SlidePuzzle.start();
+  Nav.sync();
 }
 document.querySelectorAll('[data-home]').forEach(function (btn) {
   return btn.addEventListener('click', goHome);
 });
 document.querySelectorAll('.game-card').forEach(function (card) {
   card.addEventListener('click', function () {
-    var game = card.dataset.game;
-    activeGame = game;
-    showScreen('game-' + game);
-    if (game === 'pop') Pop.start();
-    if (game === 'zoo') Zoo.start();
-    if (game === 'paint') Paint.start();
-    if (game === 'peekaboo') Peekaboo.start();
-    if (game === 'slidepuzzle') SlidePuzzle.start();
+    return openGame(card.dataset.game);
   });
 });
 
 /* ===================== AUDIO (synthesized, no assets) ===================== */
 var AudioFX = function () {
   var ctx = null;
+  var master = null;
+  var volume = 0.8;
+  var muted = false;
+  var theme = 'glockenspiel';
   function ensureCtx() {
-    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (!ctx) {
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      master = ctx.createGain();
+      master.gain.value = muted ? 0 : volume;
+      master.connect(ctx.destination);
+    }
     if (ctx.state === 'suspended') ctx.resume();
     return ctx;
   }
+  function applyVolume() {
+    if (master) master.gain.value = muted ? 0 : volume;
+  }
+  function setVolume(v) {
+    volume = v;
+    muted = v === 0;
+    applyVolume();
+  }
+  function toggleMute() {
+    muted = !muted;
+    applyVolume();
+    return muted;
+  }
+  function setTheme(t) {
+    theme = t;
+  }
+
+  // each sound theme is a different oscillator recipe on the same pitch
+  var THEMES = {
+    glockenspiel: {
+      type: 'sine',
+      glide: 1.5,
+      dur: 0.35,
+      vol: 0.3
+    },
+    laughs: {
+      type: 'triangle',
+      glide: 1.25,
+      dur: 0.22,
+      vol: 0.28
+    },
+    droplet: {
+      type: 'sine',
+      glide: 0.55,
+      dur: 0.18,
+      vol: 0.34
+    }
+  };
   function chime() {
     var pitchFreq = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 523.25;
     try {
       var c = ensureCtx();
+      var t = THEMES[theme] || THEMES.glockenspiel;
       var osc = c.createOscillator();
       var gain = c.createGain();
-      osc.type = 'sine';
+      osc.type = t.type;
       osc.frequency.setValueAtTime(pitchFreq, c.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(pitchFreq * 1.5, c.currentTime + 0.15);
-      gain.gain.setValueAtTime(0.3, c.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.35);
+      osc.frequency.exponentialRampToValueAtTime(pitchFreq * t.glide, c.currentTime + 0.15);
+      gain.gain.setValueAtTime(t.vol, c.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + t.dur);
       osc.connect(gain);
-      gain.connect(c.destination);
+      gain.connect(master);
       osc.start();
-      osc.stop(c.currentTime + 0.4);
+      osc.stop(c.currentTime + t.dur + 0.05);
     } catch (e) {/* autoplay blocked, ignore */}
+    Wave.pulse(pitchFreq);
   }
   function giggle() {
     [660, 880, 990, 1200].forEach(function (f, i) {
@@ -96,7 +229,10 @@ var AudioFX = function () {
   return {
     chime,
     giggle,
-    ensureCtx
+    ensureCtx,
+    setVolume,
+    toggleMute,
+    setTheme
   };
 }();
 document.addEventListener('pointerdown', function () {
@@ -104,6 +240,69 @@ document.addEventListener('pointerdown', function () {
 }, {
   once: true
 });
+
+/* ===================== GAME SWITCHER + VOLUME (top tabs on desktop, bottom bar on phones) ===================== */
+var Nav = function () {
+  var bar = document.createElement('nav');
+  bar.id = 'pg-nav';
+  bar.setAttribute('aria-label', 'Games');
+  var brand = document.createElement('button');
+  brand.type = 'button';
+  brand.className = 'pg-brand';
+  brand.innerHTML = '<span class="pg-brand-logo">🎈</span><span class="pg-brand-name">Baby Touch Playground</span>';
+  brand.addEventListener('click', goHome);
+  bar.appendChild(brand);
+  var tabs = document.createElement('div');
+  tabs.className = 'pg-tabs';
+  var tabEls = {};
+  GAMES.forEach(function (g) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'pg-tab';
+    b.innerHTML = '<span class="material-symbols-outlined">' + g.icon + '</span><span class="pg-tab-label">' + g.label + '</span>';
+    b.addEventListener('click', function () {
+      if (activeGame !== g.id) openGame(g.id);
+    });
+    tabs.appendChild(b);
+    tabEls[g.id] = b;
+  });
+  bar.appendChild(tabs);
+  var vol = document.createElement('div');
+  vol.className = 'pg-volume';
+  var muteBtn = document.createElement('button');
+  muteBtn.type = 'button';
+  muteBtn.className = 'pg-mute';
+  muteBtn.setAttribute('aria-label', 'Mute or unmute sounds');
+  muteBtn.innerHTML = '<span class="material-symbols-outlined">volume_up</span>';
+  var slider = document.createElement('input');
+  slider.type = 'range';
+  slider.min = '0';
+  slider.max = '100';
+  slider.value = '80';
+  slider.className = 'pg-slider';
+  slider.setAttribute('aria-label', 'Volume');
+  slider.addEventListener('input', function () {
+    AudioFX.setVolume(slider.value / 100);
+    muteBtn.firstChild.textContent = slider.value === '0' ? 'volume_off' : 'volume_up';
+  });
+  muteBtn.addEventListener('click', function () {
+    var m = AudioFX.toggleMute();
+    muteBtn.firstChild.textContent = m ? 'volume_off' : 'volume_up';
+  });
+  vol.appendChild(muteBtn);
+  vol.appendChild(slider);
+  bar.appendChild(vol);
+  document.body.appendChild(bar);
+  function sync() {
+    document.body.classList.toggle('in-game', !!activeGame);
+    Object.keys(tabEls).forEach(function (id) {
+      return tabEls[id].classList.toggle('active', id === activeGame);
+    });
+  }
+  return {
+    sync
+  };
+}();
 
 /* ===================== POP & GIGGLE ===================== */
 var Pop = function () {
@@ -113,6 +312,43 @@ var Pop = function () {
   var btnWand = document.getElementById('btn-wand-stream');
   var popCount = 0;
   var inited = false;
+  var sizeMode = 'mixed';
+  var SIZE_RANGES = {
+    mini: [48, 72],
+    mixed: [70, 120],
+    jumbo: [120, 180]
+  };
+
+  // chip groups in the side panel: bubble size + sound theme (single-select, highlight the active chip)
+  function wireChips(groupId, onPick) {
+    var group = document.getElementById(groupId);
+    if (!group) return;
+    var chips = group.querySelectorAll('.pg-chip');
+    chips.forEach(function (chip) {
+      return chip.addEventListener('click', function () {
+        chips.forEach(function (c) {
+          return c.classList.toggle('active', c === chip);
+        });
+        onPick(chip.dataset.value);
+      });
+    });
+  }
+  wireChips('pop-size-chips', function (v) {
+    sizeMode = v;
+    AudioFX.chime(600);
+  });
+  wireChips('pop-theme-chips', function (v) {
+    AudioFX.setTheme(v);
+    AudioFX.chime(784);
+  });
+  var autoRegen = document.getElementById('pop-auto-regen');
+  var autoTimer = 0;
+  if (autoRegen) autoRegen.addEventListener('change', function () {
+    clearInterval(autoTimer);
+    if (autoRegen.checked) autoTimer = setInterval(function () {
+      if (activeGame === 'pop' && stage.querySelectorAll('.bubble-node').length < 7) spawnBubble();
+    }, 2500);
+  });
   var words = ['POP!', 'GIGGLE!', 'PING!', 'WHEEE!', 'YAY!', 'SPARKLE!'];
   var bubbleColors = [{
     bg: 'from-secondary-container to-secondary-fixed',
@@ -166,7 +402,8 @@ var Pop = function () {
   }
   function spawnBubble(customX, customY, sizeClass) {
     var theme = bubbleColors[Math.floor(Math.random() * bubbleColors.length)];
-    var size = sizeClass || Math.floor(Math.random() * 50) + 70;
+    var range = SIZE_RANGES[sizeMode];
+    var size = sizeClass || Math.floor(Math.random() * (range[1] - range[0])) + range[0];
     var b = document.createElement('div');
     b.className = `bubble-node absolute rounded-full bg-gradient-to-tr ${theme.bg} cursor-pointer flex items-center justify-center transition-transform active:scale-90`;
     b.style.width = size + 'px';
@@ -473,6 +710,7 @@ var Zoo = function () {
     var custom = customAudio[a.id];
     if (custom) {
       var audio = new Audio(custom.url);
+      Wave.pulse(a.freq);
       audio.play().catch(function () {
         return AudioFX.chime(a.freq);
       });
@@ -2024,3 +2262,9 @@ var SlidePuzzle = function () {
     start
   };
 }();
+
+/* ===================== SENSORY WAVEFIELD MOUNTS ===================== */
+document.querySelectorAll('.pg-wave-slot').forEach(function (slot) {
+  return Wave.build(slot, slot.getAttribute('data-wave'));
+});
+Nav.sync();

@@ -7,9 +7,71 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+/* ===================== SENSORY WAVEFIELD (live sound-wave bars) ===================== */
+const Wave = (() => {
+  const COLORS = ['#38bdf8', '#fd933d', '#ff8cc5', '#00668a', '#ffb783', '#7bd0ff', '#fd933d', '#ff8cc5', '#38bdf8', '#a43073', '#ffb783', '#38bdf8'];
+  const fields = [];
+  let levels = [];
+  let raf = 0;
+
+  function build(container, label) {
+    const field = document.createElement('div');
+    field.className = 'pg-wave';
+    const bars = document.createElement('div');
+    bars.className = 'pg-wave-bars';
+    const barEls = [];
+    COLORS.forEach(c => {
+      const b = document.createElement('span');
+      b.className = 'pg-wave-bar';
+      b.style.background = c;
+      bars.appendChild(b);
+      barEls.push(b);
+    });
+    const cap = document.createElement('div');
+    cap.className = 'pg-wave-label';
+    cap.innerHTML = '<span class="material-symbols-outlined">graphic_eq</span><span>' + label + '</span>';
+    field.appendChild(bars);
+    field.appendChild(cap);
+    container.appendChild(field);
+    fields.push(barEls);
+    if (!levels.length) levels = COLORS.map(() => 0.22);
+  }
+
+  function tick() {
+    let alive = false;
+    for (let i = 0; i < levels.length; i++) {
+      levels[i] = Math.max(0.22, levels[i] * 0.9);
+      if (levels[i] > 0.23) alive = true;
+    }
+    fields.forEach(barEls => barEls.forEach((el, i) => { el.style.height = Math.round(levels[i] * 100) + '%'; }));
+    raf = alive ? requestAnimationFrame(tick) : 0;
+  }
+
+  // freq (Hz) lifts the bars around its pitch position; each bar gets a little jitter so it feels alive
+  function pulse(freq) {
+    if (!levels.length) return;
+    const centre = Math.max(0, Math.min(1, ((freq || 600) - 250) / 1100)) * (levels.length - 1);
+    for (let i = 0; i < levels.length; i++) {
+      const near = 1 - Math.min(1, Math.abs(i - centre) / 5);
+      levels[i] = Math.min(1, Math.max(levels[i], 0.25 + near * 0.6 * (0.75 + Math.random() * 0.25)));
+    }
+    if (!raf) raf = requestAnimationFrame(tick);
+  }
+
+  return { build, pulse };
+})();
+
 /* ===================== VIEW SWITCHING ===================== */
 const screens = document.querySelectorAll('.screen');
 let activeGame = null;
+
+const GAMES = [
+  { id: 'pop', label: 'Bubbles', icon: 'bubble_chart' },
+  { id: 'zoo', label: 'Animals', icon: 'pets' },
+  { id: 'paint', label: 'Paint', icon: 'auto_awesome' },
+  { id: 'peekaboo', label: 'Peekaboo', icon: 'visibility' },
+  { id: 'slidepuzzle', label: 'Puzzle', icon: 'extension' }
+];
 
 function showScreen(id) {
   screens.forEach(s => s.classList.toggle('active', s.id === id));
@@ -19,57 +81,147 @@ function goHome() {
   if (activeGame === 'paint') Paint.stop();
   activeGame = null;
   showScreen('home');
+  Nav.sync();
+}
+
+function openGame(game) {
+  if (activeGame === 'paint' && game !== 'paint') Paint.stop();
+  activeGame = game;
+  showScreen('game-' + game);
+  if (game === 'pop') Pop.start();
+  if (game === 'zoo') Zoo.start();
+  if (game === 'paint') Paint.start();
+  if (game === 'peekaboo') Peekaboo.start();
+  if (game === 'slidepuzzle') SlidePuzzle.start();
+  Nav.sync();
 }
 
 document.querySelectorAll('[data-home]').forEach(btn => btn.addEventListener('click', goHome));
-
 document.querySelectorAll('.game-card').forEach(card => {
-  card.addEventListener('click', () => {
-    const game = card.dataset.game;
-    activeGame = game;
-    showScreen('game-' + game);
-    if (game === 'pop') Pop.start();
-    if (game === 'zoo') Zoo.start();
-    if (game === 'paint') Paint.start();
-    if (game === 'peekaboo') Peekaboo.start();
-    if (game === 'slidepuzzle') SlidePuzzle.start();
-  });
+  card.addEventListener('click', () => openGame(card.dataset.game));
 });
 
 /* ===================== AUDIO (synthesized, no assets) ===================== */
 const AudioFX = (() => {
   let ctx = null;
+  let master = null;
+  let volume = 0.8;
+  let muted = false;
+  let theme = 'glockenspiel';
+
   function ensureCtx() {
-    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (!ctx) {
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      master = ctx.createGain();
+      master.gain.value = muted ? 0 : volume;
+      master.connect(ctx.destination);
+    }
     if (ctx.state === 'suspended') ctx.resume();
     return ctx;
   }
 
+  function applyVolume() { if (master) master.gain.value = muted ? 0 : volume; }
+  function setVolume(v) { volume = v; muted = v === 0; applyVolume(); }
+  function toggleMute() { muted = !muted; applyVolume(); return muted; }
+  function setTheme(t) { theme = t; }
+
+  // each sound theme is a different oscillator recipe on the same pitch
+  const THEMES = {
+    glockenspiel: { type: 'sine', glide: 1.5, dur: 0.35, vol: 0.3 },
+    laughs: { type: 'triangle', glide: 1.25, dur: 0.22, vol: 0.28 },
+    droplet: { type: 'sine', glide: 0.55, dur: 0.18, vol: 0.34 }
+  };
+
   function chime(pitchFreq = 523.25) {
     try {
       const c = ensureCtx();
+      const t = THEMES[theme] || THEMES.glockenspiel;
       const osc = c.createOscillator();
       const gain = c.createGain();
-      osc.type = 'sine';
+      osc.type = t.type;
       osc.frequency.setValueAtTime(pitchFreq, c.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(pitchFreq * 1.5, c.currentTime + 0.15);
-      gain.gain.setValueAtTime(0.3, c.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.35);
+      osc.frequency.exponentialRampToValueAtTime(pitchFreq * t.glide, c.currentTime + 0.15);
+      gain.gain.setValueAtTime(t.vol, c.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + t.dur);
       osc.connect(gain);
-      gain.connect(c.destination);
+      gain.connect(master);
       osc.start();
-      osc.stop(c.currentTime + 0.4);
+      osc.stop(c.currentTime + t.dur + 0.05);
     } catch (e) { /* autoplay blocked, ignore */ }
+    Wave.pulse(pitchFreq);
   }
 
   function giggle() {
     [660, 880, 990, 1200].forEach((f, i) => setTimeout(() => chime(f), i * 80));
   }
 
-  return { chime, giggle, ensureCtx };
+  return { chime, giggle, ensureCtx, setVolume, toggleMute, setTheme };
 })();
 
 document.addEventListener('pointerdown', () => AudioFX.ensureCtx(), { once: true });
+
+/* ===================== GAME SWITCHER + VOLUME (top tabs on desktop, bottom bar on phones) ===================== */
+const Nav = (() => {
+  const bar = document.createElement('nav');
+  bar.id = 'pg-nav';
+  bar.setAttribute('aria-label', 'Games');
+
+  const brand = document.createElement('button');
+  brand.type = 'button';
+  brand.className = 'pg-brand';
+  brand.innerHTML = '<span class="pg-brand-logo">🎈</span><span class="pg-brand-name">Baby Touch Playground</span>';
+  brand.addEventListener('click', goHome);
+  bar.appendChild(brand);
+
+  const tabs = document.createElement('div');
+  tabs.className = 'pg-tabs';
+  const tabEls = {};
+  GAMES.forEach(g => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'pg-tab';
+    b.innerHTML = '<span class="material-symbols-outlined">' + g.icon + '</span><span class="pg-tab-label">' + g.label + '</span>';
+    b.addEventListener('click', () => { if (activeGame !== g.id) openGame(g.id); });
+    tabs.appendChild(b);
+    tabEls[g.id] = b;
+  });
+  bar.appendChild(tabs);
+
+  const vol = document.createElement('div');
+  vol.className = 'pg-volume';
+  const muteBtn = document.createElement('button');
+  muteBtn.type = 'button';
+  muteBtn.className = 'pg-mute';
+  muteBtn.setAttribute('aria-label', 'Mute or unmute sounds');
+  muteBtn.innerHTML = '<span class="material-symbols-outlined">volume_up</span>';
+  const slider = document.createElement('input');
+  slider.type = 'range';
+  slider.min = '0';
+  slider.max = '100';
+  slider.value = '80';
+  slider.className = 'pg-slider';
+  slider.setAttribute('aria-label', 'Volume');
+  slider.addEventListener('input', () => {
+    AudioFX.setVolume(slider.value / 100);
+    muteBtn.firstChild.textContent = slider.value === '0' ? 'volume_off' : 'volume_up';
+  });
+  muteBtn.addEventListener('click', () => {
+    const m = AudioFX.toggleMute();
+    muteBtn.firstChild.textContent = m ? 'volume_off' : 'volume_up';
+  });
+  vol.appendChild(muteBtn);
+  vol.appendChild(slider);
+  bar.appendChild(vol);
+
+  document.body.appendChild(bar);
+
+  function sync() {
+    document.body.classList.toggle('in-game', !!activeGame);
+    Object.keys(tabEls).forEach(id => tabEls[id].classList.toggle('active', id === activeGame));
+  }
+
+  return { sync };
+})();
 
 /* ===================== POP & GIGGLE ===================== */
 const Pop = (() => {
@@ -80,6 +232,29 @@ const Pop = (() => {
 
   let popCount = 0;
   let inited = false;
+  let sizeMode = 'mixed';
+  const SIZE_RANGES = { mini: [48, 72], mixed: [70, 120], jumbo: [120, 180] };
+
+  // chip groups in the side panel: bubble size + sound theme (single-select, highlight the active chip)
+  function wireChips(groupId, onPick) {
+    const group = document.getElementById(groupId);
+    if (!group) return;
+    const chips = group.querySelectorAll('.pg-chip');
+    chips.forEach(chip => chip.addEventListener('click', () => {
+      chips.forEach(c => c.classList.toggle('active', c === chip));
+      onPick(chip.dataset.value);
+    }));
+  }
+  wireChips('pop-size-chips', v => { sizeMode = v; AudioFX.chime(600); });
+  wireChips('pop-theme-chips', v => { AudioFX.setTheme(v); AudioFX.chime(784); });
+  const autoRegen = document.getElementById('pop-auto-regen');
+  let autoTimer = 0;
+  if (autoRegen) autoRegen.addEventListener('change', () => {
+    clearInterval(autoTimer);
+    if (autoRegen.checked) autoTimer = setInterval(() => {
+      if (activeGame === 'pop' && stage.querySelectorAll('.bubble-node').length < 7) spawnBubble();
+    }, 2500);
+  });
 
   const words = ['POP!', 'GIGGLE!', 'PING!', 'WHEEE!', 'YAY!', 'SPARKLE!'];
   const bubbleColors = [
@@ -118,7 +293,8 @@ const Pop = (() => {
 
   function spawnBubble(customX, customY, sizeClass) {
     const theme = bubbleColors[Math.floor(Math.random() * bubbleColors.length)];
-    const size = sizeClass || (Math.floor(Math.random() * 50) + 70);
+    const range = SIZE_RANGES[sizeMode];
+    const size = sizeClass || (Math.floor(Math.random() * (range[1] - range[0])) + range[0]);
     const b = document.createElement('div');
     b.className = `bubble-node absolute rounded-full bg-gradient-to-tr ${theme.bg} cursor-pointer flex items-center justify-center transition-transform active:scale-90`;
     b.style.width = size + 'px';
@@ -335,6 +511,7 @@ const Zoo = (() => {
     const custom = customAudio[a.id];
     if (custom) {
       const audio = new Audio(custom.url);
+      Wave.pulse(a.freq);
       audio.play().catch(() => AudioFX.chime(a.freq));
     } else {
       AudioFX.chime(a.freq);
@@ -1667,3 +1844,7 @@ const SlidePuzzle = (() => {
 
   return { start };
 })();
+
+/* ===================== SENSORY WAVEFIELD MOUNTS ===================== */
+document.querySelectorAll('.pg-wave-slot').forEach(slot => Wave.build(slot, slot.getAttribute('data-wave')));
+Nav.sync();

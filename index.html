@@ -18,6 +18,7 @@
 <link rel="stylesheet" href="style.tailwind-static.css">
 <link rel="stylesheet" href="style.legacy-patch.css">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.playground.css">
 </head>
 <body class="bg-surface font-body-md text-on-surface select-none overflow-hidden">
 
@@ -77,7 +78,27 @@
       </div>
     </div>
   </div>
-  <div class="w-full px-margin-mobile py-space-sm grid grid-cols-2 gap-space-sm flex-shrink-0 pb-safe">
+  <div class="pg-wave-slot pg-wave-slot-pop" data-wave="Sensory Waveform"></div>
+  <div class="pg-panel">
+    <div class="pg-panel-group">
+      <span class="pg-panel-title"><span class="material-symbols-outlined">music_note</span>Sound Theme</span>
+      <div class="pg-chips" id="pop-theme-chips">
+        <button class="pg-chip active" data-value="glockenspiel" type="button">Glockenspiel</button>
+        <button class="pg-chip" data-value="laughs" type="button">Baby Laughs</button>
+        <button class="pg-chip" data-value="droplet" type="button">Droplets</button>
+      </div>
+    </div>
+    <div class="pg-panel-group">
+      <span class="pg-panel-title"><span class="material-symbols-outlined">aspect_ratio</span>Bubble Size</span>
+      <div class="pg-chips" id="pop-size-chips">
+        <button class="pg-chip" data-value="mini" type="button">Mini</button>
+        <button class="pg-chip active" data-value="mixed" type="button">Mixed</button>
+        <button class="pg-chip" data-value="jumbo" type="button">Jumbo</button>
+      </div>
+    </div>
+    <label class="pg-switch"><span>Auto-refill sky</span><input id="pop-auto-regen" type="checkbox"/><i></i></label>
+  </div>
+  <div class="w-full px-margin-mobile py-space-sm grid grid-cols-2 gap-space-sm flex-shrink-0 pb-safe pg-pop-actions">
     <button class="w-full min-h-touch-min py-space-sm px-space-sm rounded-lg bg-secondary-container text-on-secondary-container flex items-center justify-center gap-space-xs shadow-[0_8px_0_#693300] active:translate-y-2 active:shadow-[0_2px_0_#693300] transition-all" id="btn-more-bubbles" type="button">
       <span class="material-symbols-outlined text-[28px]">bubble_chart</span>
       <span class="font-label-md text-label-md">More Bubbles!</span>
@@ -103,6 +124,7 @@
         <span class="font-label-md text-label-md">Tap any friend to hear their sound!</span>
       </div>
     </div>
+    <div class="pg-wave-slot" data-wave="Sensory Wavefield &bull; Live Sound Waves"></div>
     <div class="grid grid-cols-2 gap-space-sm w-full relative" id="animal-grid"></div>
     <div class="flex items-center gap-space-sm w-full mt-space-xs">
       <button class="flex-1 h-touch-min px-space-md rounded-xl bg-tertiary text-on-tertiary shadow-[0_8px_0_#811057] active:translate-y-1.5 active:shadow-[0_2px_0_#811057] flex items-center justify-center gap-space-xs transition-all" id="btn-sing-along" type="button">
@@ -147,6 +169,7 @@
         <span class="material-symbols-outlined text-[24px]">water_drop</span><span class="font-label-md text-label-md">Fluid Flow</span>
       </button>
     </div>
+    <div class="pg-wave-slot paint-chrome" data-wave="Sensory Wavefield &bull; Live Chime Waves"></div>
     <div class="relative w-full rounded-xl overflow-hidden shadow-[0_12px_40px_rgba(0,102,138,0.15)] bg-[#1a1233] aspect-[4/5] max-h-[480px] flex items-center justify-center touch-none select-none" id="paint-stage">
       <div class="absolute inset-0 pointer-events-none opacity-40 bg-[radial-gradient(circle_at_20%_20%,#a43073_0%,transparent_50%),radial-gradient(circle_at_80%_80%,#00668a_0%,transparent_50%)]"></div>
       <canvas class="w-full h-full block absolute inset-0 touch-none hidden" id="fluid-canvas"></canvas>
@@ -195,6 +218,7 @@
         <span class="font-body-sm text-body-sm text-on-surface-variant">Tap a hiding spot to reveal who's inside!</span>
       </div>
     </div>
+    <div class="pg-wave-slot" data-wave="Sensory Wavefield &bull; Peekaboo Giggle Waves"></div>
     <div class="grid grid-cols-2 gap-space-md w-full" id="peekaboo-grid" style="perspective:1000px;"></div>
     <div class="grid grid-cols-2 gap-space-sm w-full mt-space-xs">
       <button class="min-h-touch-min py-space-sm px-space-md rounded-xl bg-tertiary text-on-tertiary shadow-[0_8px_0_#811057] active:translate-y-1.5 active:shadow-[0_2px_0_#811057] flex items-center justify-center gap-space-xs transition-all" id="btn-hide-all" type="button">
